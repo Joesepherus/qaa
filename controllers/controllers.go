@@ -82,6 +82,10 @@ func RestApi() {
 //	http.HandleFunc("/api/answers", saveAnswer)
 //	http.HandleFunc("/api/answers/feedback", updateFeedback)
 //	http.HandleFunc("/api/questions", addQuestion)
+	http.Handle("/", http.HandlerFunc(PageHandler))
+
+	// Serve static files (CSS)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 
 
 	log.Printf("Starting server on :%d...\n", port)
