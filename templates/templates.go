@@ -27,6 +27,7 @@ func InitTemplates(location string) {
 	pageTemplates := []string{
         BaseLocation + "/index.html",
 		BaseLocation + "/random.html",
+		BaseLocation + "/feedback.html",
 		BaseLocation + "/404.html",
 		BaseLocation + "/error.html",
 	}

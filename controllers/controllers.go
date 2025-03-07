@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"os"
+	"qaa/controllers/answersController"
 	"qaa/controllers/questionsController"
+	"qaa/services/answersService"
 	"qaa/services/questionsService"
 	"qaa/templates"
 	"strconv"
@@ -38,7 +41,6 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		// Add other default data here if needed
 	}
 
-
 	switch r.URL.Path {
 	case "/":
 		templateLocation = templates.BaseLocation + "/index.html"
@@ -51,6 +53,28 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 
 		templateLocation = templates.BaseLocation + "/random.html"
 		pageTitle = "Random Question"
+	case "/feedback":
+		pathParts := strings.Split(r.URL.Path, "/")
+		if len(pathParts) < 3 || pathParts[1] != "feedback" {
+			http.Error(w, "Invalid URL format", http.StatusBadRequest)
+			return
+		}
+
+		answerIdStr := pathParts[2]
+		answerId, err := strconv.Atoi(answerIdStr)
+
+		answer, err := answersService.GetAnswerById(answerId)
+		if err == nil {
+			data["Answer"] = answer
+		}
+
+		question, err := questionsService.GetQuestionById(answer.QuestionID)
+		if err == nil {
+			data["Question"] = question
+		}
+
+		templateLocation = templates.BaseLocation + "/feedback.html"
+		pageTitle = "Feedback"
 	case "/health":
 		healthHandler(w)
 		return
@@ -60,8 +84,35 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		message := r.URL.Query().Get("message")
 		data["Message"] = message
 	default:
-		templateLocation = templates.BaseLocation + "/404.html"
-		pageTitle = "Page not found"
+		// Handle /feedback/{number}
+		if strings.HasPrefix(r.URL.Path, "/feedback/") {
+
+			pathParts := strings.Split(r.URL.Path, "/")
+			if len(pathParts) < 3 || pathParts[1] != "feedback" {
+				http.Error(w, "Invalid URL format", http.StatusBadRequest)
+				return
+			}
+
+			answerIdStr := pathParts[2]
+			answerId, err := strconv.Atoi(answerIdStr)
+
+			answer, err := answersService.GetAnswerById(answerId)
+			if err == nil {
+				data["Answer"] = answer
+			}
+
+			question, err := questionsService.GetQuestionById(answer.QuestionID)
+			if err == nil {
+				data["Question"] = question
+			}
+
+			templateLocation = templates.BaseLocation + "/feedback.html"
+			pageTitle = "Feedback"
+
+		} else {
+			templateLocation = templates.BaseLocation + "/404.html"
+			pageTitle = "Page not found"
+		}
 	}
 
 	data["Title"] = pageTitle
@@ -88,14 +139,13 @@ func RestApi() {
 	}
 
 	http.HandleFunc("/api/questions/random", questionsController.GetRandomQuestion)
-//	http.HandleFunc("/api/answers", saveAnswer)
-//	http.HandleFunc("/api/answers/feedback", updateFeedback)
-//	http.HandleFunc("/api/questions", addQuestion)
+	http.HandleFunc("/api/answers/save-answer", answersController.SaveAnswer)
+	//	http.HandleFunc("/api/answers/feedback", updateFeedback)
+	//	http.HandleFunc("/api/questions", addQuestion)
 	http.Handle("/", http.HandlerFunc(PageHandler))
 
 	// Serve static files (CSS)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
-
 
 	log.Printf("Starting server on :%d...\n", port)
 	log.Fatal(server.ListenAndServe())
