@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strings"
@@ -108,6 +109,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 			question, err := questionsService.GetQuestionById(answer.QuestionID)
 			if err == nil {
 				data["Question"] = question
+				data["CorrectAnswer"] = template.HTML(question.CorrectAnswer)
 			}
 
 			templateLocation = templates.BaseLocation + "/feedback.html"

@@ -2,7 +2,7 @@
 
 <div class="content">
   <div class="page">
-    <div class="landing-page">
+    <div class="">
       <h2>Feedback</h2>
       <div class="question-container">
         {{ if .Question }}
@@ -12,7 +12,7 @@
             <p>{{ .Question.QuestionText }}</p>
 
             <label>Answer:</label>
-            <p>{{ .Question.CorrectAnswer }}</p>
+            <p>{{ .CorrectAnswer }}</p>
           </div>
 
           <div class="answer-section">
