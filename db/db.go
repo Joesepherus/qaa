@@ -9,7 +9,7 @@ import (
 
 var DB *sql.DB
 
-func InitDB(dataSourceName string) *sql.DB {
+func InitDB() *sql.DB {
 	// Connection string format:
 	connStr := "host=localhost port=3080 user=user password=XnRrfdJEKn4pAx2JnApk8H0an5VmhzUs dbname=postgres sslmode=disable"
 
