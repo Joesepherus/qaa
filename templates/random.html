@@ -1,0 +1,116 @@
+{{ define "content" }}
+
+<div class="content">
+  <div class="page">
+    <div class="landing-page">
+      <h2>Random Question</h2>
+      <div class="question-container">
+        {{ if .Question }}
+          <form class="question-form" action="/submit-answer" method="POST">
+            <div class="question-text">
+              <label>Question:</label>
+              <p>{{ .Question.QuestionText }}</p>
+            </div>
+            
+            <div class="answer-section">
+              <label for="answer">Your Answer:</label>
+              <textarea 
+                id="answer" 
+                name="answer" 
+                rows="4" 
+                class="answer-input"
+                placeholder="Type your answer here..."
+                required
+              ></textarea>
+            </div>
+
+            <!-- Hidden field to send question ID -->
+            <input type="hidden" name="question_id" value="{{ .Question.ID }}">
+
+            <div class="button-group">
+              <button type="submit" class="btn btn-submit">Submit Answer</button>
+              <a href="/random" class="btn btn-skip">Skip Question</a>
+            </div>
+          </form>
+        {{ else }}
+          <p>No question available at the moment.</p>
+          <a href="/random" class="btn btn-retry">Try Again</a>
+        {{ end }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .question-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+  }
+
+  .question-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .question-text {
+    margin-bottom: 15px;
+  }
+
+  .question-text label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .answer-section label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .answer-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .btn-submit {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+  }
+
+  .btn-submit:hover {
+    background-color: #45a049;
+  }
+
+  .btn-skip, .btn-retry {
+    background-color: #f44336;
+    color: white;
+    border: none;
+  }
+
+  .btn-skip:hover, .btn-retry:hover {
+    background-color: #da190b;
+  }
+</style>
+
+{{ end }}

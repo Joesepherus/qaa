@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"os"
-	"strconv"
-    "qaa/controllers/questionsController"
+	"qaa/controllers/questionsController"
+	"qaa/services/questionsService"
 	"qaa/templates"
+	"strconv"
 )
 
 // Health check handler
@@ -42,6 +43,14 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 	case "/":
 		templateLocation = templates.BaseLocation + "/index.html"
 		pageTitle = "Trading Alerts"
+	case "/random":
+		question, err := questionsService.GetRandomQuestion()
+		if err == nil {
+			data["Question"] = question
+		}
+
+		templateLocation = templates.BaseLocation + "/random.html"
+		pageTitle = "Random Question"
 	case "/health":
 		healthHandler(w)
 		return
