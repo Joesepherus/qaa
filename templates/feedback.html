@@ -6,37 +6,47 @@
       <h2>Feedback</h2>
       <div class="question-container">
         {{ if .Question }}
-          <form class="question-form" action="api/answers/save-answer" method="POST">
-            <div class="question-text">
-              <label>Question:</label>
-              <p>{{ .Question.QuestionText }}</p>
+        <form class="question-form" action="/api/answers/feedback" method="POST">
+          <div class="question-text">
+            <label>Question:</label>
+            <p>{{ .Question.QuestionText }}</p>
 
-              <label>Answer:</label>
-              <p>{{ .Question.CorrectAnswer }}</p>
-            </div>
-            
-            <div class="answer-section">
-              <label for="answer">Your Answer:</label>
-              <div>{{ .Answer.UserAnswer}}</div>
-            </div>
+            <label>Answer:</label>
+            <p>{{ .Question.CorrectAnswer }}</p>
+          </div>
 
-            <!-- Hidden field to send question ID -->
-            <input type="hidden" name="question_id" value="{{ .Question.ID }}">
+          <div class="answer-section">
+            <label for="answer">Your Answer:</label>
+            <div>{{ .Answer.UserAnswer}}</div>
+          </div>
 
-            <div class="button-group">
-              <button type="submit" class="btn btn-submit">Correct</button>
-              <a href="/random" class="btn btn-skip">Somewhat correct</a>
-              <a href="/random" class="btn btn-skip">Incorrect</a>
-            </div>
-          </form>
+
+          <input type="hidden" name="answer_id" value="{{ .Answer.ID }}"> <!-- Replace with actual answer ID -->
+          <input type="hidden" name="feedback" id="feedback" value="">
+
+          <div class="button-group">
+            <button type="submit" class="btn btn-submit" onclick="setFeedback('correct')">Correct</button>
+            <button type="submit" class="btn btn-somewhat" onclick="setFeedback('somewhat')">Somewhat
+              correct</button>
+            <button type="submit" class="btn btn-skip" onclick="setFeedback('incorrect')">Incorrect</button>
+          </div>
+
+        </form>
         {{ else }}
-          <p>No question available at the moment.</p>
-          <a href="/random" class="btn btn-retry">Try Again</a>
+        <p>No question available at the moment.</p>
+        <a href="/random" class="btn btn-retry">Try Again</a>
         {{ end }}
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  function setFeedback(value) {
+    document.getElementById('feedback').value = value;
+  }
+</script>
+
 
 <style>
   .question-container {
@@ -99,15 +109,23 @@
     background-color: #45a049;
   }
 
-  .btn-skip, .btn-retry {
+  .btn-skip,
+  .btn-retry {
     background-color: #f44336;
     color: white;
     border: none;
   }
 
-  .btn-skip:hover, .btn-retry:hover {
+  .btn-skip:hover,
+  .btn-retry:hover {
     background-color: #da190b;
   }
+
+
+    .btn-somewhat {
+        background-color: #6ab7ff; /* Light bluish color for Somewhat correct */
+    }
+
 </style>
 
 {{ end }}
