@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: qaa-postgres
+    environment:
+      POSTGRES_PASSWORD: XnRrfdJEKn4pAx2JnApk8H0an5VmhzUs
+      POSTGRES_USER: user
+      POSTGRES_DB: postgres
+    ports:
+      - "3080:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
+
