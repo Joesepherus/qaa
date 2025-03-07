@@ -9,7 +9,6 @@ import (
 var db *sql.DB
 
 func SetDB(database *sql.DB) {
-    println("kokot", database)
 	db = database
 }
 
