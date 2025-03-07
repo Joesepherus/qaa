@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ .Title }}</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    <link rel="apple-touch-icon-precomposed" href="/static/img/apple-touch-icon-precomposed.png">
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="icon" href="/static/img/favicon.ico" type="image/x-icon" />
+    <script src="/static/js/main.js" defer></script>
+  </head>
+  <body>
+    <header class="sticky-header">
+      <nav class="navigation">
+        <div class="logo">
+          <a href="/"
+            ><img src="/static/img/logo.png" width="30" alt="Logo"
+          /></a>
+        </div>
+        <div class="nav-container">
+          <ul class="navigation-list">
+            <li><a href="/about">About</a></li>
+          </ul>
+        </div>
+        <button class="menu-toggle" aria-label="Toggle navigation">
+          <span class="menu-icon"></span>
+          <span class="menu-icon"></span>
+          <span class="menu-icon"></span>
+        </button>
+      </nav>
+    </header>
+
+    {{ block "content" . }}{{ end }}
+
+    <footer>
+      <div class="footer-content">
+        <p>&copy; 2025 qaa. All rights reserved.</p>
+      </div>
+    </footer>
+
+</html>
+
