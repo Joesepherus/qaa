@@ -26,3 +26,19 @@ func GetRandomQuestion() (questionsTypes.Question, error) {
 
     return question, nil
 }
+
+
+func GetQuestionById(questionID int) (questionsTypes.Question, error) {
+	var question questionsTypes.Question
+
+    err := db.QueryRow("SELECT id, question_text, correct_answer FROM questions WHERE id = $1", questionID).
+        Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer)
+    
+
+	if err != nil {
+		return questionsTypes.Question{}, fmt.Errorf("failed to query question: %v", err)
+	}
+
+	return question, nil
+}
+
