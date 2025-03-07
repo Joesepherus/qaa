@@ -29,43 +29,6 @@ func main() {
 }
 
 //
-//	w.Header().Set("Content-Type", "application/json")
-//	json.NewEncoder(w).Encode(a)
-//}
-//
-//func updateFeedback(w http.ResponseWriter, r *http.Request) {
-//	if r.Method != http.MethodPost {
-//		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-//		return
-//	}
-//
-//	type FeedbackRequest struct {
-//		AnswerID int    `json:"answer_id"`
-//		Feedback string `json:"feedback"`
-//	}
-//
-//	var req FeedbackRequest
-//	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-//		http.Error(w, err.Error(), http.StatusBadRequest)
-//		return
-//	}
-//
-//	// Validate feedback value
-//	if req.Feedback != "correct" && req.Feedback != "somewhat" && req.Feedback != "incorrect" {
-//		http.Error(w, "Invalid feedback value", http.StatusBadRequest)
-//		return
-//	}
-//
-//	_, err := db.Exec(
-//		"UPDATE answers SET feedback = $1 WHERE id = $2",
-//		req.Feedback, req.AnswerID)
-//	if err != nil {
-//		http.Error(w, err.Error(), http.StatusInternalServerError)
-//		return
-//	}
-//
-//	w.WriteHeader(http.StatusOK)
-//}
 //
 //func addQuestion(w http.ResponseWriter, r *http.Request) {
 //	if r.Method != http.MethodPost {

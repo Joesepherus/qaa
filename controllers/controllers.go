@@ -101,6 +101,10 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 				data["Answer"] = answer
 			}
 
+			if answer.Feedback != nil {
+				http.Redirect(w, r, "/random", http.StatusSeeOther)
+			}
+
 			question, err := questionsService.GetQuestionById(answer.QuestionID)
 			if err == nil {
 				data["Question"] = question
@@ -140,7 +144,7 @@ func RestApi() {
 
 	http.HandleFunc("/api/questions/random", questionsController.GetRandomQuestion)
 	http.HandleFunc("/api/answers/save-answer", answersController.SaveAnswer)
-	//	http.HandleFunc("/api/answers/feedback", updateFeedback)
+	http.HandleFunc("/api/answers/feedback", answersController.UpdateFeedbackOnAnswer)
 	//	http.HandleFunc("/api/questions", addQuestion)
 	http.Handle("/", http.HandlerFunc(PageHandler))
 
