@@ -28,6 +28,8 @@ func InitTemplates(location string) {
         BaseLocation + "/index.html",
 		BaseLocation + "/random.html",
 		BaseLocation + "/feedback.html",
+		BaseLocation + "/questions.html",
+		BaseLocation + "/question-saved.html",
 		BaseLocation + "/404.html",
 		BaseLocation + "/error.html",
 	}
