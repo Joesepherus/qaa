@@ -16,7 +16,7 @@ func SetDB(database *sql.DB) {
 func GetQuestions() ([]questionsTypes.Question, error) {
 	var questions []questionsTypes.Question
 
-	rows, err := db.Query("SELECT id, question_text, correct_answer FROM questions")
+	rows, err := db.Query("SELECT id, question_text, correct_answer, training_id FROM questions")
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to query alerts: %v", err)
@@ -26,7 +26,7 @@ func GetQuestions() ([]questionsTypes.Question, error) {
 	// Iterate over rows and scan into struct
 	for rows.Next() {
 		var question questionsTypes.Question
-		if err := rows.Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer); err != nil {
+		if err := rows.Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer, &question.TrainingID); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %v", err)
 		}
 		questions = append(questions, question)
@@ -65,12 +65,12 @@ func GetQuestionById(questionID int) (questionsTypes.Question, error) {
 	return question, nil
 }
 
-func SaveQuestion(questionText string, correctAnswer string) (questionsTypes.Question, error) {
+func SaveQuestion(questionText string, correctAnswer string, trainingID int) (questionsTypes.Question, error) {
 	var savedQuestion questionsTypes.Question
 
 	err := db.QueryRow(
-		"INSERT INTO questions (question_text, correct_answer) VALUES ($1, $2) RETURNING id, question_text, correct_answer",
-		questionText, correctAnswer).Scan(&savedQuestion.ID, &savedQuestion.QuestionText, &savedQuestion.CorrectAnswer)
+		"INSERT INTO questions (question_text, correct_answer, training_id) VALUES ($1, $2, $3) RETURNING id, question_text, correct_answer",
+		questionText, correctAnswer, trainingID).Scan(&savedQuestion.ID, &savedQuestion.QuestionText, &savedQuestion.CorrectAnswer)
 
 	if err != nil {
 		log.Printf("error inserting question: %v", err)

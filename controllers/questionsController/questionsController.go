@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"qaa/errorUtils"
 	"qaa/services/questionsService"
+	"strconv"
 )
 
 func GetRandomQuestion(w http.ResponseWriter, r *http.Request) {
@@ -35,15 +36,23 @@ func SaveQuestion(w http.ResponseWriter, r *http.Request) {
 	// Extract form values
 	questionText := r.FormValue("questionText")
 	correctAnswer := r.FormValue("correctAnswer")
+	trainingIDStr := r.FormValue("trainingID")
+
+	// Convert triggerValue to float64
+	trainingID, err := strconv.Atoi(trainingIDStr)
+	if err != nil {
+		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
+		return
+	}
 
 	// Example validation
-	if questionText == "" || correctAnswer == "" {
+	if questionText == "" || correctAnswer == "" || trainingID <= 0 {
 		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
 		return
 	}
 
 	// Add question to the database
-	_, err = questionsService.SaveQuestion(questionText, correctAnswer)
+	_, err = questionsService.SaveQuestion(questionText, correctAnswer, trainingID)
 
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+save+question", http.StatusSeeOther)
