@@ -13,7 +13,6 @@ func SetDB(database *sql.DB) {
 	db = database
 }
 
-
 func GetQuestions() ([]questionsTypes.Question, error) {
 	var questions []questionsTypes.Question
 
@@ -75,7 +74,7 @@ func SaveQuestion(questionText string, correctAnswer string) (questionsTypes.Que
 
 	if err != nil {
 		log.Printf("error inserting question: %v", err)
-		return questionsTypes.Question{}, nil
+		return questionsTypes.Question{}, fmt.Errorf("error inserting question: %v", err)
 	}
 
 	return savedQuestion, nil

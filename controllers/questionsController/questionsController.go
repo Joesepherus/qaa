@@ -7,7 +7,6 @@ import (
 	"qaa/services/questionsService"
 )
 
-
 func GetRandomQuestion(w http.ResponseWriter, r *http.Request) {
 	question, err := questionsService.GetRandomQuestion()
 
@@ -23,18 +22,13 @@ func GetRandomQuestion(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 }
 
-
 func SaveQuestion(w http.ResponseWriter, r *http.Request) {
 	errorUtils.MethodNotAllowed_error(w, r)
 
-	var response map[string]string
 	// Parse form values
 	err := r.ParseForm()
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		response = map[string]string{"error": "Failed to parse form data"}
-		json.NewEncoder(w).Encode(response)
+		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
 		return
 	}
 
@@ -44,29 +38,18 @@ func SaveQuestion(w http.ResponseWriter, r *http.Request) {
 
 	// Example validation
 	if questionText == "" || correctAnswer == "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		response = map[string]string{"error": "Invalid question data"}
-		json.NewEncoder(w).Encode(response)
+		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
 		return
 	}
 
 	// Add question to the database
-    _, err = questionsService.SaveQuestion(questionText, correctAnswer)
+	_, err = questionsService.SaveQuestion(questionText, correctAnswer)
+
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		response = map[string]string{"error": "Failed to store question"}
-		json.NewEncoder(w).Encode(response)
+		http.Redirect(w, r, "/error?message=Failed+to+save+question", http.StatusSeeOther)
 		return
 	}
 
 	// Success response
 	http.Redirect(w, r, "/question-saved", http.StatusSeeOther)
-
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	response = map[string]string{"message": "Question added successfully"}
-	json.NewEncoder(w).Encode(response)
 }
