@@ -1,0 +1,136 @@
+{{ define "content" }}
+
+<div class="content">
+  <div class="page">
+    <div class="landing-page">
+      <h2>Questions</h2>
+      <div class="question-container">
+        <div><button onclick="openCreateQuestionModal()">create question</button></div>
+        <div id="alertsTable" class="grid-container">
+          <div class="grid-header">
+            <div class="grid-item header-item">Question</div>
+            <div class="grid-item header-item">Answer</div>
+            <div class="grid-item header-item">Action</div>
+          </div>
+
+          {{range .Questions}}
+          <div class="grid-body" id="alert-{{.ID}}">
+            <div class="grid-item body-item">{{.QuestionText}}</div>
+            <div class="grid-item body-item">{{.CorrectAnswer}}</div>
+            <div class="grid-item body-item">
+              <form action="/api/delete-alert?id={{.ID}}" method="post">
+                <input type="hidden" name="id" value="{{.ID}}">
+                <button type="submit"
+                  style="color: red; background: none; border: none; cursor: pointer; padding: 0;">❌</button>
+              </form>
+            </div>
+          </div>
+
+          {{else}}
+
+          <p>No question available at the moment.</p>
+          <a href="/random" class="btn btn-retry">Try Again</a>
+          <div>No active alerts found.</div>
+          {{end}}
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="create-question-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeCreateQuestionModal()">&times;</span>
+      <div id="create-question-form" class="active-form">
+        <h2>Add Question</h2>
+        <form action="/api/questions/save-question" method="post">
+          <div class="form-group">
+            <label for="questionText">Question</label>
+            <input type="text" id="questionText" name="questionText" placeholder="Enter question" required />
+          </div>
+          <div class="form-group">
+            <label for="correctAnswer">Answer</label>
+            <input type="text" id="correctAnswer" name="correctAnswer" placeholder="Enter answer" required />
+          </div>
+          <button type="submit" class="submit-btn">Create Question</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .question-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+  }
+
+  .question-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .question-text {
+    margin-bottom: 15px;
+  }
+
+  .question-text label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .answer-section label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .answer-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .btn-submit {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+  }
+
+  .btn-submit:hover {
+    background-color: #45a049;
+  }
+
+  .btn-skip,
+  .btn-retry {
+    background-color: #f44336;
+    color: white;
+    border: none;
+  }
+
+  .btn-skip:hover,
+  .btn-retry:hover {
+    background-color: #da190b;
+  }
+</style>
+
+{{ end }}
