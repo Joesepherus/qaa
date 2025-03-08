@@ -44,10 +44,28 @@ func InitDB() *sql.DB {
 	}
 
 	statement, err = DB.Prepare(`
+    CREATE TABLE IF NOT EXISTS trainings (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `)
+	if err != nil {
+		log.Fatal("Error preparing trainings table:", err)
+	}
+	_, err = statement.Exec()
+	if err != nil {
+		log.Fatal("Error executing trainings table statement:", err)
+	}
+
+	statement, err = DB.Prepare(`
     CREATE TABLE IF NOT EXISTS questions (
             id SERIAL PRIMARY KEY,
             question_text TEXT NOT NULL,
-            correct_answer TEXT NOT NULL
+            correct_answer TEXT NOT NULL,
+            training_id INT NOT NULL,
+            FOREIGN KEY (training_id) REFERENCES trainings(id)
     );
   `)
 	if err != nil {
@@ -75,6 +93,7 @@ func InitDB() *sql.DB {
 	if err != nil {
 		log.Fatal("Error executing answers table statement:", err)
 	}
+
 
 	DB.SetMaxOpenConns(50)
 	DB.SetMaxIdleConns(50)
