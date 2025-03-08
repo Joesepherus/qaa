@@ -54,6 +54,17 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 
 		templateLocation = templates.BaseLocation + "/random.html"
 		pageTitle = "Random Question"
+	case "/questions":
+		questions, err := questionsService.GetQuestions()
+		if err == nil {
+			data["Questions"] = questions
+		}
+
+		templateLocation = templates.BaseLocation + "/questions.html"
+		pageTitle = "Questions"
+	case "/question-saved":
+		templateLocation = templates.BaseLocation + "/question-saved.html"
+		pageTitle = "Question Saved"
 	case "/feedback":
 		pathParts := strings.Split(r.URL.Path, "/")
 		if len(pathParts) < 3 || pathParts[1] != "feedback" {
@@ -147,7 +158,7 @@ func RestApi() {
 	http.HandleFunc("/api/questions/random", questionsController.GetRandomQuestion)
 	http.HandleFunc("/api/answers/save-answer", answersController.SaveAnswer)
 	http.HandleFunc("/api/answers/feedback", answersController.UpdateFeedbackOnAnswer)
-	//	http.HandleFunc("/api/questions", addQuestion)
+	http.HandleFunc("/api/questions/save-question", questionsController.SaveQuestion)
 	http.Handle("/", http.HandlerFunc(PageHandler))
 
 	// Serve static files (CSS)

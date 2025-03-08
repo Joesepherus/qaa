@@ -28,28 +28,5 @@ func main() {
 
 }
 
-//
-//
-//func addQuestion(w http.ResponseWriter, r *http.Request) {
-//	if r.Method != http.MethodPost {
-//		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-//		return
-//	}
-//
-//	var q Question
-//	if err := json.NewDecoder(r.Body).Decode(&q); err != nil {
-//		http.Error(w, err.Error(), http.StatusBadRequest)
-//		return
-//	}
-//
-//	err := db.QueryRow(
-//		"INSERT INTO questions (question_text, correct_answer) VALUES ($1, $2) RETURNING id",
-//		q.QuestionText, q.CorrectAnswer).Scan(&q.ID)
-//	if err != nil {
-//		http.Error(w, err.Error(), http.StatusInternalServerError)
-//		return
-//	}
-//
-//	w.Header().Set("Content-Type", "application/json")
-//	json.NewEncoder(w).Encode(q)
-//}
+
+
