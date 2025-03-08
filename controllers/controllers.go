@@ -11,8 +11,10 @@ import (
 	"os"
 	"qaa/controllers/answersController"
 	"qaa/controllers/questionsController"
+	"qaa/controllers/trainingsController"
 	"qaa/services/answersService"
 	"qaa/services/questionsService"
+	"qaa/services/trainingsService"
 	"qaa/templates"
 	"strconv"
 )
@@ -65,6 +67,17 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 	case "/question-saved":
 		templateLocation = templates.BaseLocation + "/question-saved.html"
 		pageTitle = "Question Saved"
+	case "/trainings":
+		trainings, err := trainingsService.GetTrainings()
+		if err == nil {
+			data["Trainings"] = trainings
+		}
+
+		templateLocation = templates.BaseLocation + "/trainings.html"
+		pageTitle = "Trainings"
+	case "/training-saved":
+		templateLocation = templates.BaseLocation + "/training-saved.html"
+		pageTitle = "Training Saved"
 	case "/feedback":
 		pathParts := strings.Split(r.URL.Path, "/")
 		if len(pathParts) < 3 || pathParts[1] != "feedback" {
@@ -159,6 +172,7 @@ func RestApi() {
 	http.HandleFunc("/api/answers/save-answer", answersController.SaveAnswer)
 	http.HandleFunc("/api/answers/feedback", answersController.UpdateFeedbackOnAnswer)
 	http.HandleFunc("/api/questions/save-question", questionsController.SaveQuestion)
+	http.HandleFunc("/api/trainings/save-training", trainingsController.SaveTraining)
 	http.Handle("/", http.HandlerFunc(PageHandler))
 
 	// Serve static files (CSS)

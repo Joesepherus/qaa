@@ -6,6 +6,7 @@ import (
 	database "qaa/db"
 	"qaa/services/answersService"
 	"qaa/services/questionsService"
+	"qaa/services/trainingsService"
 	"qaa/templates"
 
 	_ "github.com/lib/pq"
@@ -21,12 +22,13 @@ func main() {
 	defer database.DB.Close()
 	// Pass the db connection to alertsService
 	questionsService.SetDB(db)
-	answersService.SetDB(db)
+    answersService.SetDB(db)
+	trainingsService.SetDB(db)
 
 	// start a new goroutine for the rest api endpoints
 	controllers.RestApi()
 
 }
 
-
-
+//
+//
