@@ -6,7 +6,7 @@
       <h2>Questions</h2>
       <div class="question-container">
         <div><button onclick="openCreateQuestionModal()">create question</button></div>
-        <div id="alertsTable" class="grid-container">
+        <div class="grid-container">
           <div class="grid-header">
             <div class="grid-item header-item">Question</div>
             <div class="grid-item header-item">Answer</div>
@@ -14,11 +14,11 @@
           </div>
 
           {{range .Questions}}
-          <div class="grid-body" id="alert-{{.ID}}">
+          <div class="grid-body" id="question-{{.ID}}">
             <div class="grid-item body-item">{{.QuestionText}}</div>
             <div class="grid-item body-item">{{.CorrectAnswer}}</div>
             <div class="grid-item body-item">
-              <form action="/api/delete-alert?id={{.ID}}" method="post">
+              <form action="/api/delete-question?id={{.ID}}" method="post">
                 <input type="hidden" name="id" value="{{.ID}}">
                 <button type="submit"
                   style="color: red; background: none; border: none; cursor: pointer; padding: 0;">❌</button>
@@ -30,7 +30,7 @@
 
           <p>No question available at the moment.</p>
           <a href="/random" class="btn btn-retry">Try Again</a>
-          <div>No active alerts found.</div>
+          <div>No active questions found.</div>
           {{end}}
 
         </div>
@@ -82,26 +82,6 @@
     margin-bottom: 5px;
   }
 
-  .answer-section label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 5px;
-  }
-
-  .answer-input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    resize: vertical;
-  }
-
-  .button-group {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-  }
-
   .btn {
     padding: 10px 20px;
     border-radius: 4px;
@@ -120,17 +100,6 @@
     background-color: #45a049;
   }
 
-  .btn-skip,
-  .btn-retry {
-    background-color: #f44336;
-    color: white;
-    border: none;
-  }
-
-  .btn-skip:hover,
-  .btn-retry:hover {
-    background-color: #da190b;
-  }
 </style>
 
 {{ end }}
