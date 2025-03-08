@@ -1,0 +1,102 @@
+{{ define "content" }}
+
+<div class="content">
+  <div class="page">
+    <div class="landing-page">
+      <h2>Trainings</h2>
+      <div class="trainings-container">
+        <div><button onclick="openCreateTrainingModal()">create training</button></div>
+        <div id="trainingsTable" class="grid-container">
+          <div class="grid-header">
+            <div class="grid-item header-item">Training</div>
+            <div class="grid-item header-item">Name</div>
+            <div class="grid-item header-item">Description</div>
+          </div>
+
+          {{range .Trainings}}
+          <div class="grid-body" id="training-{{.ID}}">
+            <div class="grid-item body-item">{{.Name}}</div>
+            <div class="grid-item body-item">{{.Description}}</div>
+            <div class="grid-item body-item">
+              <form action="/api/delete-training?id={{.ID}}" method="post">
+                <input type="hidden" name="id" value="{{.ID}}">
+                <button type="submit"
+                  style="color: red; background: none; border: none; cursor: pointer; padding: 0;">❌</button>
+              </form>
+            </div>
+          </div>
+
+          {{else}}
+          <p>No trainings available at the moment.</p>
+          <a href="/trainings" class="btn btn-retry">Try Again</a>
+          {{end}}
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="create-training-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeCreateTrainingModal()">&times;</span>
+      <div id="create-training-form" class="active-form">
+        <h2>Add Training</h2>
+        <form action="/api/trainings/save-training" method="post">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Enter name" required />
+          </div>
+          <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" placeholder="Enter description" required />
+          </div>
+          <button type="submit" class="submit-btn">Create Training</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .trainings-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+  }
+
+  .training-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .training-text {
+    margin-bottom: 15px;
+  }
+
+  .training-text label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .btn-submit {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+  }
+
+  .btn-submit:hover {
+    background-color: #45a049;
+  }
+</style>
+
+{{ end }}
