@@ -56,13 +56,15 @@ func SaveQuestion(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		response = map[string]string{"error": "Failed to store qustion"}
+		response = map[string]string{"error": "Failed to store question"}
 		json.NewEncoder(w).Encode(response)
 		return
 	}
 
 	// Success response
 	http.Redirect(w, r, "/question-saved", http.StatusSeeOther)
+
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	response = map[string]string{"message": "Question added successfully"}
