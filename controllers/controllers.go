@@ -62,6 +62,11 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 			data["Questions"] = questions
 		}
 
+		trainings, err := trainingsService.GetTrainings()
+		if err == nil {
+			data["Trainings"] = trainings
+		}
+
 		templateLocation = templates.BaseLocation + "/questions.html"
 		pageTitle = "Questions"
 	case "/question-saved":

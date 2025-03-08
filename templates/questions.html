@@ -7,16 +7,18 @@
       <div class="question-container">
         <div><button onclick="openCreateQuestionModal()">create question</button></div>
         <div class="grid-container">
-          <div class="grid-header">
+          <div class="grid-4-header">
             <div class="grid-item header-item">Question</div>
             <div class="grid-item header-item">Answer</div>
+            <div class="grid-item header-item">TrainingID</div>
             <div class="grid-item header-item">Action</div>
           </div>
 
           {{range .Questions}}
-          <div class="grid-body" id="question-{{.ID}}">
+          <div class="grid-4-body" id="question-{{.ID}}">
             <div class="grid-item body-item">{{.QuestionText}}</div>
             <div class="grid-item body-item">{{.CorrectAnswer}}</div>
+            <div class="grid-item body-item">{{.TrainingID}}</div>
             <div class="grid-item body-item">
               <form action="/api/delete-question?id={{.ID}}" method="post">
                 <input type="hidden" name="id" value="{{.ID}}">
@@ -50,6 +52,15 @@
           <div class="form-group">
             <label for="correctAnswer">Answer</label>
             <input type="text" id="correctAnswer" name="correctAnswer" placeholder="Enter answer" required />
+          </div>
+          <div class="form-group">
+            <label for="trainingID">Training</label>
+            <select id="training-select" name="trainingID">
+              <option value="">Select a training</option>
+              {{range .Trainings}}
+              <option value="{{.ID}}">{{.Name}}</option>
+              {{end}}
+            </select>
           </div>
           <button type="submit" class="submit-btn">Create Question</button>
         </form>
@@ -98,7 +109,6 @@
   .btn-submit:hover {
     background-color: #45a049;
   }
-
 </style>
 
 {{ end }}

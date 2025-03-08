@@ -130,6 +130,25 @@ footer p {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
+  background: #fff;
+}
+
+.form-group select {
+  padding: 10px;               /* Padding for the content area */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  background: #fff;
+  width: 100%;                 /* Ensure full width */
+  box-sizing: border-box;      /* Include padding in width */
+  -webkit-appearance: none;    /* Remove native arrow (Chrome, Safari) */
+  -moz-appearance: none;       /* Remove native arrow (Firefox) */
+  appearance: none;            /* Remove native arrow (standard) */
+  position: relative;          /* For positioning the custom arrow */
+ background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center; /* Position arrow with padding from right */
+  background-size: 10px;        /* Size of the custom arrow */
 }
 
 .form-row button {
@@ -574,7 +593,7 @@ button:hover {
 
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(1, 1fr); /* 3 columns of equal width */
+  grid-template-columns: repeat(1, 1fr); /* 1 columns of equal width */
 }
 
 .grid-item {
@@ -587,11 +606,14 @@ button:hover {
   font-weight: 600;
 }
 
-
-
 .grid-header, .grid-body {
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* 3 columns of equal width */
+}
+
+.grid-4-header, .grid-4-body {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 columns of equal width */
 }
 
 .grid-body:nth-child(even) {
