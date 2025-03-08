@@ -23,7 +23,7 @@ func SaveAnswer(userID int, questionId int, answer string) (answersTypes.Answer,
 
 	if err != nil {
 		log.Printf("error inserting answer: %v", err)
-		return answersTypes.Answer{}, err // Return empty Answer and the error
+		return answersTypes.Answer{}, fmt.Errorf("error inserting answer: %v", err)
 	}
 
 	return savedAnswer, nil
@@ -44,8 +44,6 @@ func GetAnswerById(answerID int) (answersTypes.Answer, error) {
 }
 
 func UpdateFeedbackOnAnswer(answerID int, feedback string) error {
-	println("answerID", answerID)
-	println("feedback", feedback)
 	_, err := db.Exec(
 		"UPDATE answers SET feedback = $1 WHERE id = $2",
 		feedback, answerID)
@@ -53,6 +51,5 @@ func UpdateFeedbackOnAnswer(answerID int, feedback string) error {
 		return fmt.Errorf("There was an error while updating answer with id: %d - %v", err)
 	}
 
-	fmt.Print("Answer Updated.\n")
 	return nil
 }

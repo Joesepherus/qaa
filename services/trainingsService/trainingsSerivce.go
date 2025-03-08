@@ -62,7 +62,7 @@ func SaveTraining(name string, description string) (trainingsTypes.Training, err
 
 	if err != nil {
 		log.Printf("error inserting training: %v", err)
-		return trainingsTypes.Training{}, nil
+        return trainingsTypes.Training{}, fmt.Errorf("error inserting training: %v", err)
 	}
 
 	return savedTraining, nil
