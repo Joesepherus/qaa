@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"tradingalerts/types/userTypes"
+	"qaa/types/userTypes"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"

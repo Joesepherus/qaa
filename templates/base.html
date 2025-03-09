@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/static/css/styles.css" />
     <link rel="icon" href="/static/img/favicon.ico" type="image/x-icon" />
     <script src="/static/js/main.js" defer></script>
+    <script src="/static/js/auth.js" defer></script>
   </head>
   <body>
     <header class="sticky-header">
@@ -25,6 +26,13 @@
             <li><a href="/random">Random Questions</a></li>
             <li><a href="/questions">Questions</a></li>
             <li><a href="/trainings">Trainings</a></li>
+            {{ if .Email }}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/api/logout">Logout</a></li>
+            {{ else }}
+            <li><a onclick="openModalShowLoginForm()">Login</a></li>
+            <li><a onclick="openModalShowSignUpForm()">Signup</a></li>
+            {{ end }}
           </ul>
         </div>
         <button class="menu-toggle" aria-label="Toggle navigation">
@@ -42,6 +50,127 @@
         <p>&copy; 2025 qaa. All rights reserved.</p>
       </div>
     </footer>
+
+    <div id="signup-modal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeSignUpForm()">&times;</span>
+        <!-- Sign Up Form -->
+        <div id="signup-form" class="active-form">
+          <h2>Sign Up</h2>
+          <form action="/api/sign-up" method="post">
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="confirm-password">Confirm Password</label>
+              <input
+                type="password"
+                id="confirm-password"
+                name="confirm-password"
+                placeholder="Confirm your password"
+                required
+              />
+            </div>
+            <button type="submit" class="submit-btn">Sign up</button>
+          </form>
+          <a class="switch-link" onclick="showLoginForm()"
+            >Already have an account? Log in</a
+          >
+        </div>
+        <!-- Login Form -->
+        <div id="login-form">
+          <h2>Log In</h2>
+          <form action="/api/login" method="post">
+            <div class="form-group">
+              <label for="login-email">Email</label>
+              <input
+                type="email"
+                id="login-email"
+                name="email"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input
+                type="password"
+                id="login-password"
+                name="password"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+            <button type="submit" class="submit-btn">Log In</button>
+            <a class="switch-link" onclick="showSignUpForm()"
+              >Don't have an account? Sign up</a
+            >
+            <a class="switch-link" onclick="showResetPasswordForm()"
+              >Forgot password?</a
+            >
+          </form>
+        </div>
+        <!-- Reset Password Request Form -->
+        <div id="reset-password-form">
+          <h2>Reset Password</h2>
+          <form action="/api/reset-password" method="post">
+            <div class="form-group">
+              <label for="login-email">Email</label>
+              <input
+                type="email"
+                id="login-email"
+                name="email"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            <button type="submit" class="submit-btn">Reset Password</button>
+            <a class="switch-link" onclick="showSignUpForm()"
+              >Don't have an account? Sign up</a
+            >
+          </form>
+        </div>
+          <!-- Set Password Form -->
+          <div id="set-password-form">
+            <h2>Set New Password</h2>
+            <form action="/api/set-password" method="post">
+              <div class="form-group">
+                <input type="hidden" id="tokenInput" name="token" value="">
+                <label for="login-password">Password</label>
+                <input
+                  type="password"
+                  id="login-password"
+                  name="password"
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+              <button type="submit" class="submit-btn">Set Password</button>
+              <a class="switch-link" onclick="showSignUpForm()"
+                >Don't have an account? Sign up</a
+              >
+            </form>
+          </div>
+      </div>
+    </div>
+
 
 </html>
 

@@ -10,6 +10,7 @@ import (
 
 	"os"
 	"qaa/controllers/answersController"
+	"qaa/controllers/authController"
 	"qaa/controllers/questionsController"
 	"qaa/controllers/trainingsController"
 	"qaa/middlewares/authMiddleware"
@@ -300,6 +301,14 @@ func RestApi() {
 	http.Handle("/api/training/edit-training", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(trainingsController.EditTraining)))
 	http.Handle("/api/training/delete-training", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(trainingsController.DeleteTraining)))
 	http.Handle("/api/answers/feedback", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(answersController.UpdateFeedbackOnAnswer)))
+
+	// Authentication routes
+	http.Handle("/api/sign-up", authMiddleware.TokenCheckMiddleware(http.HandlerFunc(authController.SignUp)))
+	http.Handle("/api/login", authMiddleware.TokenCheckMiddleware(http.HandlerFunc(authController.Login)))
+	http.Handle("/api/logout", authMiddleware.TokenCheckMiddleware(http.HandlerFunc(authController.Logout)))
+	http.Handle("/api/reset-password", authMiddleware.TokenCheckMiddleware(http.HandlerFunc(authController.ResetPassword)))
+	http.Handle("/api/set-password", authMiddleware.TokenCheckMiddleware(http.HandlerFunc(authController.SetPassword)))
+	http.Handle("/api/delete-account", authMiddleware.TokenCheckMiddleware(http.HandlerFunc(authController.DeleteAccount)))
 
 	http.Handle("/", authMiddleware.TokenCheckMiddleware(http.HandlerFunc(PageHandler)))
 

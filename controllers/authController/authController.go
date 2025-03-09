@@ -10,7 +10,7 @@ import (
 	"time"
 	"qaa/mail"
 	"qaa/middlewares/authMiddleware"
-	"qaa/services/userService"
+	"qaa/services/usersService"
 	"qaa/utils/authUtils"
 	"qaa/utils/errorUtils"
 
@@ -24,23 +24,15 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 	if email == "" || password == "" {
 		log.Println("Error creating user: Email and password are required")
-		loggingService.LogToDB("ERROR", "Error creating user: Email and password are required", r)
 		http.Redirect(w, r, "/error?message=Email+and+password+are+required", http.StatusSeeOther)
 		return
 	}
 
-	userID, err := userService.CreateUser(email, password)
+	_, err := usersService.CreateUser(email, password)
 	if err != nil {
 		log.Println("Error creating user:", err)
-		loggingService.LogToDB("ERROR", "Error creating user", r)
 		http.Redirect(w, r, "/error?message=Error+creating+user", http.StatusSeeOther)
 		return
-	}
-	payments.CreateCustomer(email)
-	canAddAlert, subscriptionType := subscriptionUtils.CheckToAddAlert(userID, email)
-	subscriptionUtils.UserSubscription[email] = subscriptionUtils.UserAlertInfo{
-		CanAddAlert:      canAddAlert,
-		SubscriptionType: subscriptionType,
 	}
 	http.Redirect(w, r, "/?login=true", http.StatusSeeOther)
 }
@@ -53,22 +45,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	if email == "" || password == "" {
 		log.Println("Email and password are required")
-		loggingService.LogToDB("ERROR", "Email and password are required", r)
 		http.Redirect(w, r, "/error?message=Email+and+password+are+required", http.StatusSeeOther)
 		return
 	}
 
-	user, err := userService.GetUserByEmail(email)
+	user, err := usersService.GetUserByEmail(email)
 	if err != nil {
 		log.Println("Invalid email or password")
-		loggingService.LogToDB("ERROR", "Invalid email or password", r)
 		http.Redirect(w, r, "/error?message=Invalid+email+or+password", http.StatusSeeOther)
 		return
 	}
 
 	if !authUtils.CheckPassword(user, password) {
 		log.Println("Invalid email or password")
-		loggingService.LogToDB("ERROR", "Invalid email or password", r)
 		http.Redirect(w, r, "/error?message=Invalid+email+or+password", http.StatusSeeOther)
 		return
 	}
@@ -77,7 +66,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	token, err := authUtils.GenerateToken(email)
 	if err != nil {
 		log.Println("Error generating token")
-		loggingService.LogToDB("ERROR", "Error generating token", r)
 		http.Redirect(w, r, "/error?message=Error+generating+token", http.StatusSeeOther)
 		return
 	}
@@ -118,15 +106,13 @@ func ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	if email == "" {
 		log.Println("Email is required")
-		loggingService.LogToDB("ERROR", "Email is required", r)
 		http.Redirect(w, r, "/error?message=Email+is+required", http.StatusSeeOther)
 		return
 	}
 
-	user, err := userService.GetUserByEmail(email)
+	user, err := usersService.GetUserByEmail(email)
 	if err != nil || user == nil {
 		log.Println("User does not exist with that email address")
-		loggingService.LogToDB("ERROR", "User does not exist with that email address", r)
 		http.Redirect(w, r, "/error?message=User+does+not+exist+with+that+email+address", http.StatusSeeOther)
 		return
 	}
@@ -136,7 +122,6 @@ func ResetPassword(w http.ResponseWriter, r *http.Request) {
 	_, err = rand.Read(tokenBytes)
 	if err != nil {
 		log.Println("Error generating token")
-		loggingService.LogToDB("ERROR", "Error generating token", r)
 		http.Redirect(w, r, "/error?message=Error+generating+token", http.StatusSeeOther)
 		return
 	}
@@ -182,10 +167,9 @@ func SetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Print("token is valid", tokenData.Expiration, time.Now())
 
-	user, err := userService.GetUserByEmail(tokenData.Email)
+	user, err := usersService.GetUserByEmail(tokenData.Email)
 	if err != nil || user == nil {
 		log.Println("User does not exist with that email address")
-		loggingService.LogToDB("ERROR", "User does not exist with that email address", r)
 		http.Redirect(w, r, "/error?message=User+does+not+exist+with+that+email+address", http.StatusSeeOther)
 		return
 	}
@@ -194,16 +178,14 @@ func SetPassword(w http.ResponseWriter, r *http.Request) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Println("Error hashing password")
-		loggingService.LogToDB("ERROR", "Error hashing password", r)
 		http.Redirect(w, r, "/error?message=Error+hashing+password", http.StatusSeeOther)
 		return
 	}
 
 	// Save the new password in your database (pseudo-code)
-	err = userService.UpdatePassword(tokenData.Email, string(hashedPassword))
+	err = usersService.UpdatePassword(tokenData.Email, string(hashedPassword))
 	if err != nil {
 		log.Println("Error saving new password")
-		loggingService.LogToDB("ERROR", "Error saving new password", r)
 		http.Redirect(w, r, "/error?message=Error+saving+new+password", http.StatusSeeOther)
 		return
 	}
@@ -219,16 +201,12 @@ func DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	errorUtils.MethodNotAllowed_error(w, r)
 	email := r.Context().Value(authMiddleware.UserEmailKey).(string)
 
-	err := userService.DeleteAccount(email)
+	err := usersService.DeleteAccount(email)
 
 	if err != nil {
-		loggingService.LogToDB("ERROR", "Error deleting account", r)
 		http.Redirect(w, r, "/error?message=Error+deleting+account", http.StatusSeeOther)
 		return
 	}
-
-	loggingService.LogToDB("INFO", "Account deleted succesfully", r)
-	loggingService.LogToDB("INFO", "Logout user with email: "+email, r)
 
 	Logout(w, r)
 
