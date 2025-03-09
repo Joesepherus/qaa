@@ -2,7 +2,7 @@ package trainingsController
 
 import (
 	"net/http"
-	"qaa/errorUtils"
+	"qaa/utils/errorUtils"
 	"qaa/services/trainingsService"
 	"strconv"
 )

@@ -2,7 +2,7 @@ package answersController
 
 import (
 	"net/http"
-	"qaa/errorUtils"
+	"qaa/utils/errorUtils"
 	"qaa/services/answersService"
 	"strconv"
 )

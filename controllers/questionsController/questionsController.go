@@ -3,7 +3,7 @@ package questionsController
 import (
 	"encoding/json"
 	"net/http"
-	"qaa/errorUtils"
+	"qaa/utils/errorUtils"
 	"qaa/services/questionsService"
 	"strconv"
 )
