@@ -11,7 +11,7 @@ var DB *sql.DB
 
 func InitDB() *sql.DB {
 	// Connection string format:
-	connStr := "host=localhost port=3080 user=user password=XnRrfdJEKn4pAx2JnApk8H0an5VmhzUs dbname=postgres sslmode=disable"
+	connStr := "host=localhost port=3081 user=user password=XnRrfdJEKn4pAx2JnApk8H0an5VmhzUs dbname=postgres sslmode=disable"
 
 	// Establish a connection
 	DB, err := sql.Open("postgres", connStr)

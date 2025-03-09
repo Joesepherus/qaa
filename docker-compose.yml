@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_DB: postgres
     ports:
-      - "3080:5432"
+      - "3081:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
