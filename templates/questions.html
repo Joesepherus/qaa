@@ -11,7 +11,7 @@
             <div class="grid-item header-item">Question</div>
             <div class="grid-item header-item">Answer</div>
             <div class="grid-item header-item">TrainingID</div>
-            <div class="grid-item header-item">Action</div>
+            <div class="grid-item header-item">Actions</div>
           </div>
 
           {{range .Questions}}
@@ -75,7 +75,7 @@
     <div class="modal-content">
       <span class="close" onclick="closeEditQuestionModal()">&times;</span>
       <div id="edit-question-form" class="active-form">
-        <h2>Add Question</h2>
+        <h2>Edit Question</h2>
         <form action="/api/questions/edit-question" method="post">
           <input type="hidden" name="ID" value="{{.SelectedQuestion.ID}}">
           <div class="form-group">
