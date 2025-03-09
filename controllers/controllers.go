@@ -275,7 +275,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func RestApi() {
-	port := 8090
+	port := 8092
 	if envPort := os.Getenv("PORT"); envPort != "" {
 		if p, err := strconv.Atoi(envPort); err == nil {
 			port = p
