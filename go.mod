@@ -1,6 +1,6 @@
 module qaa
 
-go 1.24.0
+go 1.22.5
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
