@@ -75,9 +75,6 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 
 		templateLocation = templates.BaseLocation + "/questions.html"
 		pageTitle = "Questions"
-	case "/question-saved":
-		templateLocation = templates.BaseLocation + "/question-saved.html"
-		pageTitle = "Question Saved"
 	case "/trainings":
 		trainings, err := trainingsService.GetTrainings()
 		if err == nil {
@@ -171,7 +168,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 
 			if training.ID != 0 {
 				question, err = questionsService.GetRandomQuestionWithTraining(trainingId)
-                data["TrainingId"] = trainingId
+				data["TrainingId"] = trainingId
 			} else {
 				question, err = questionsService.GetRandomQuestion()
 			}
@@ -182,6 +179,35 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 
 			templateLocation = templates.BaseLocation + "/random.html"
 			pageTitle = "Random Question"
+		}
+		if strings.HasPrefix(r.URL.Path, "/questions/") {
+			questions, err := questionsService.GetQuestions()
+			if err == nil {
+				data["Questions"] = questions
+			}
+
+			trainings, err := trainingsService.GetTrainings()
+			if err == nil {
+				data["Trainings"] = trainings
+			}
+
+	        pathParts := strings.Split(r.URL.Path, "/")
+			if len(pathParts) < 3 || pathParts[1] != "questions" {
+				http.Error(w, "Invalid URL format", http.StatusBadRequest)
+				return
+			}
+
+			questionIdStr := pathParts[2]
+			questionId, err := strconv.Atoi(questionIdStr)
+
+			selectedQuestion, err := questionsService.GetQuestionById(questionId)
+            println("selectedQuestion", selectedQuestion.TrainingID)
+			if err == nil {
+				data["SelectedQuestion"] = selectedQuestion
+			}
+
+			templateLocation = templates.BaseLocation + "/questions.html"
+			pageTitle = "Questions"
 		} else {
 			templateLocation = templates.BaseLocation + "/404.html"
 			pageTitle = "Page not found"
@@ -215,6 +241,8 @@ func RestApi() {
 	http.HandleFunc("/api/answers/save-answer", answersController.SaveAnswer)
 	http.HandleFunc("/api/answers/feedback", answersController.UpdateFeedbackOnAnswer)
 	http.HandleFunc("/api/questions/save-question", questionsController.SaveQuestion)
+	http.HandleFunc("/api/questions/edit-question", questionsController.EditQuestion)
+	http.HandleFunc("/api/questions/delete-question", questionsController.DeleteQuestion)
 	http.HandleFunc("/api/trainings/save-training", trainingsController.SaveTraining)
 	http.Handle("/", http.HandlerFunc(PageHandler))
 

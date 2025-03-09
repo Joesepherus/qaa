@@ -23,3 +23,29 @@ function selectTraining() {
   window.location.href = "/random/" + trainingId
 }
 
+function openEditQuestionModal() {
+  const modal = document.getElementById("edit-question-modal");
+  modal.classList.add("show");
+}
+
+function closeEditQuestionModal() {
+  const modal = document.getElementById("edit-question-modal");
+  modal.classList.remove("show");
+}
+
+function selectQuestion(questionId) {
+  console.log("questionId", questionId);
+  window.location.href = "/questions/" + questionId
+}
+
+function isQuestionUrl() {
+  const pathname = window.location.pathname;
+  const regex = /^\/questions\/\d+$/;
+  return regex.test(pathname);
+}
+
+window.onload = function() {
+  if (isQuestionUrl()) {
+    openEditQuestionModal()
+  }
+}

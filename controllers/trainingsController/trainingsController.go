@@ -34,5 +34,5 @@ func SaveTraining(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Success response
-	http.Redirect(w, r, "/training-saved", http.StatusSeeOther)
+	http.Redirect(w, r, "/trainings", http.StatusSeeOther)
 }

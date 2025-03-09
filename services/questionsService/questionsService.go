@@ -52,7 +52,6 @@ func GetRandomQuestion() (questionsTypes.Question, error) {
 	return question, nil
 }
 
-
 func GetRandomQuestionWithTraining(trainingID int) (questionsTypes.Question, error) {
 	var question questionsTypes.Question
 
@@ -68,8 +67,8 @@ func GetRandomQuestionWithTraining(trainingID int) (questionsTypes.Question, err
 func GetQuestionById(questionID int) (questionsTypes.Question, error) {
 	var question questionsTypes.Question
 
-	err := db.QueryRow("SELECT id, question_text, correct_answer FROM questions WHERE id = $1", questionID).
-		Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer)
+	err := db.QueryRow("SELECT id, question_text, correct_answer, training_id FROM questions WHERE id = $1", questionID).
+		Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer, &question.TrainingID)
 
 	if err != nil {
 		return questionsTypes.Question{}, fmt.Errorf("failed to query question: %v", err)
@@ -92,3 +91,40 @@ func SaveQuestion(questionText string, correctAnswer string, trainingID int) (qu
 
 	return savedQuestion, nil
 }
+
+func EditQuestion(ID int, questionText string, correctAnswer string, trainingID int) (questionsTypes.Question, error) {
+	var updatedQuestion questionsTypes.Question
+
+	err := db.QueryRow(
+		"UPDATE questions SET question_text = $1, correct_answer = $2, training_id = $3 WHERE id = $4 RETURNING id, question_text, correct_answer, training_id",
+		questionText, correctAnswer, trainingID, ID,
+	).Scan(&updatedQuestion.ID, &updatedQuestion.QuestionText, &updatedQuestion.CorrectAnswer, &updatedQuestion.TrainingID)
+
+	if err != nil {
+		log.Printf("error inserting question: %v", err)
+		return questionsTypes.Question{}, fmt.Errorf("error inserting question: %v", err)
+	}
+
+	return updatedQuestion, nil
+}
+
+func DeleteQuestion(ID int) error {
+    result, err := db.Exec("DELETE FROM questions WHERE id = $1", ID)
+    if err != nil {
+        log.Printf("error deleting question with ID %d: %v", ID, err)
+        return fmt.Errorf("error deleting question: %v", err)
+    }
+
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        log.Printf("error checking rows affected for ID %d: %v", ID, err)
+        return fmt.Errorf("error checking deletion: %v", err)
+    }
+    if rowsAffected == 0 {
+        log.Printf("no question found with ID %d", ID)
+        return fmt.Errorf("no question found with ID %d", ID)
+    }
+
+    return nil
+}
+

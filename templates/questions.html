@@ -20,11 +20,13 @@
             <div class="grid-item body-item">{{.CorrectAnswer}}</div>
             <div class="grid-item body-item">{{.TrainingID}}</div>
             <div class="grid-item body-item">
-              <form action="/api/delete-question?id={{.ID}}" method="post">
-                <input type="hidden" name="id" value="{{.ID}}">
+              <form action="/api/questions/delete-question" method="post">
+                <input type="hidden" name="ID" value="{{.ID}}">
                 <button type="submit"
                   style="color: red; background: none; border: none; cursor: pointer; padding: 0;">❌</button>
               </form>
+              <button type="button" onclick="selectQuestion({{.ID}})"
+                style="color: red; background: none; border: none; cursor: pointer; padding: 0;">✍️</button>
             </div>
           </div>
 
@@ -67,6 +69,40 @@
       </div>
     </div>
   </div>
+
+
+  <div id="edit-question-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeEditQuestionModal()">&times;</span>
+      <div id="edit-question-form" class="active-form">
+        <h2>Add Question</h2>
+        <form action="/api/questions/edit-question" method="post">
+          <input type="hidden" name="ID" value="{{.SelectedQuestion.ID}}">
+          <div class="form-group">
+            <label for="questionText">Question</label>
+            <input type="text" id="questionText" name="questionText" placeholder="Enter question" required
+              value={{.SelectedQuestion.QuestionText}} />
+          </div>
+          <div class="form-group">
+            <label for="correctAnswer">Answer</label>
+            <input type="text" id="correctAnswer" name="correctAnswer" placeholder="Enter answer" required
+              value={{.SelectedQuestion.CorrectAnswer}} />
+          </div>
+          <div class="form-group">
+            <label for="trainingID">Training</label>
+            <select id="training-select" name="trainingID">
+              <option value="">Select a training</option>
+              {{range .Trainings}}
+              <option value="{{.ID}}" {{if eq .ID $.SelectedQuestion.TrainingID}}selected{{end}}>{{.Name}}</option>
+              {{end}}
+            </select>
+          </div>
+          <button type="submit" class="submit-btn">Edit Question</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <style>
