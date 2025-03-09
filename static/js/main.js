@@ -20,7 +20,6 @@ function closeCreateTrainingModal() {
 
 function selectTrainingForRandomQuestion() {
   const trainingId = document.getElementById('training-select').value;
-  console.log("trainingId", trainingId);
   window.location.href = "/random/" + trainingId
 }
 
