@@ -13,10 +13,10 @@ func SetDB(database *sql.DB) {
 	db = database
 }
 
-func GetTrainings() ([]trainingsTypes.Training, error) {
+func GetTrainings(userID int) ([]trainingsTypes.Training, error) {
 	var trainings []trainingsTypes.Training
 
-	rows, err := db.Query("SELECT id, name, description, created_at FROM trainings")
+	rows, err := db.Query("SELECT id, name, description, created_at FROM trainings WHERE user_id = $1", userID)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to query training: %v", err)
@@ -40,40 +40,44 @@ func GetTrainings() ([]trainingsTypes.Training, error) {
 	return trainings, nil
 }
 
-func GetTrainingById(trainingID int) (trainingsTypes.Training, error) {
+func GetTrainingById(userID int, trainingID int) (trainingsTypes.Training, error) {
 	var training trainingsTypes.Training
 
-	err := db.QueryRow("SELECT id, name, description, created_at FROM trainings WHERE id = $1", trainingID).
+	err := db.QueryRow("SELECT id, name, description, created_at FROM trainings WHERE id = $1 AND user_id = $2", trainingID, userID).
 		Scan(&training.ID, &training.Name, &training.Description, &training.CreatedAt)
 
 	if err != nil {
-        return trainingsTypes.Training{}, fmt.Errorf("failed to query training: %v", err)
+		return trainingsTypes.Training{}, fmt.Errorf("failed to query training: %v", err)
 	}
 
 	return training, nil
 }
 
-func SaveTraining(name string, description string) (trainingsTypes.Training, error) {
+func SaveTraining(userID int, name string, description string) (trainingsTypes.Training, error) {
 	var savedTraining trainingsTypes.Training
 
 	err := db.QueryRow(
-		"INSERT INTO trainings (name, description) VALUES ($1, $2) RETURNING id, name, description, created_at",
-		name, description).Scan(&savedTraining.ID, &savedTraining.Name, &savedTraining.Description, &savedTraining.CreatedAt)
+		"INSERT INTO trainings (name, description, user_id) VALUES ($1, $2, $3) RETURNING id, name, description, created_at",
+		name, description, userID).Scan(&savedTraining.ID, &savedTraining.Name, &savedTraining.Description, &savedTraining.CreatedAt)
 
 	if err != nil {
 		log.Printf("error inserting training: %v", err)
-        return trainingsTypes.Training{}, fmt.Errorf("error inserting training: %v", err)
+		return trainingsTypes.Training{}, fmt.Errorf("error inserting training: %v", err)
 	}
 
 	return savedTraining, nil
 }
 
-func EditTraining(ID int, name string, description string) (trainingsTypes.Training, error) {
+func EditTraining(userID int, ID int, name string, description string) (trainingsTypes.Training, error) {
+	_, err := GetTrainingById(userID, ID)
+	if err != nil {
+		return trainingsTypes.Training{}, err
+	}
 	var updatedTraining trainingsTypes.Training
 
-	err := db.QueryRow(
-		"UPDATE trainings SET name = $1, description = $2 WHERE id = $3 RETURNING id, name, description",
-		name, description, ID,
+	err = db.QueryRow(
+		"UPDATE trainings SET name = $1, description = $2 WHERE id = $3 AND user_id = $4 RETURNING id, name, description",
+		name, description, ID, userID,
 	).Scan(&updatedTraining.ID, &updatedTraining.Name, &updatedTraining.Description)
 
 	if err != nil {
@@ -84,23 +88,27 @@ func EditTraining(ID int, name string, description string) (trainingsTypes.Train
 	return updatedTraining, nil
 }
 
-func DeleteTraining(ID int) error {
-    result, err := db.Exec("DELETE FROM trainings WHERE id = $1", ID)
-    if err != nil {
-        log.Printf("error deleting training with ID %d: %v", ID, err)
-        return fmt.Errorf("error deleting training: %v", err)
-    }
+func DeleteTraining(userID int, ID int) error {
+	_, err := GetTrainingById(userID, ID)
+	if err != nil {
+		return err
+	}
 
-    rowsAffected, err := result.RowsAffected()
-    if err != nil {
-        log.Printf("error checking rows affected for ID %d: %v", ID, err)
-        return fmt.Errorf("error checking deletion: %v", err)
-    }
-    if rowsAffected == 0 {
-        log.Printf("no training found with ID %d", ID)
-        return fmt.Errorf("no training found with ID %d", ID)
-    }
+	result, err := db.Exec("DELETE FROM trainings WHERE id = $1 WHERE user_id = $2", ID, userID)
+	if err != nil {
+		log.Printf("error deleting training with ID %d: %v", ID, err)
+		return fmt.Errorf("error deleting training: %v", err)
+	}
 
-    return nil
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Printf("error checking rows affected for ID %d: %v", ID, err)
+		return fmt.Errorf("error checking deletion: %v", err)
+	}
+	if rowsAffected == 0 {
+		log.Printf("no training found with ID %d", ID)
+		return fmt.Errorf("no training found with ID %d", ID)
+	}
+
+	return nil
 }
-

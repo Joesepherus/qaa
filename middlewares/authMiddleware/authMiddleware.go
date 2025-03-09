@@ -16,9 +16,7 @@ const (
 
 func TokenAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        println("HELLO")
 		cookie, err := r.Cookie("token")
-        println("cookie", cookie)
 		if err != nil {
 			http.Redirect(w, r, "/error?message=Unauthorized", http.StatusSeeOther)
 			return

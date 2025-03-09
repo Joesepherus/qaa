@@ -2,14 +2,25 @@ package questionsController
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
-	"qaa/utils/errorUtils"
+	"qaa/middlewares/authMiddleware"
 	"qaa/services/questionsService"
+	"qaa/services/usersService"
+	"qaa/utils/errorUtils"
 	"strconv"
 )
 
 func GetRandomQuestion(w http.ResponseWriter, r *http.Request) {
-	question, err := questionsService.GetRandomQuestion()
+	email := r.Context().Value(authMiddleware.UserEmailKey).(string)
+	user, err := usersService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("User not found")
+		http.Redirect(w, r, "/error?message=User+not+found", http.StatusSeeOther)
+		return
+	}
+
+	question, err := questionsService.GetRandomQuestion(user.ID)
 
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+fetch+questions", http.StatusSeeOther)
@@ -26,8 +37,16 @@ func GetRandomQuestion(w http.ResponseWriter, r *http.Request) {
 func SaveQuestion(w http.ResponseWriter, r *http.Request) {
 	errorUtils.MethodNotAllowed_error(w, r)
 
+	email := r.Context().Value(authMiddleware.UserEmailKey).(string)
+	user, err := usersService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("User not found")
+		http.Redirect(w, r, "/error?message=User+not+found", http.StatusSeeOther)
+		return
+	}
+
 	// Parse form values
-	err := r.ParseForm()
+	err = r.ParseForm()
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
 		return
@@ -52,7 +71,7 @@ func SaveQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add question to the database
-	_, err = questionsService.SaveQuestion(questionText, correctAnswer, trainingID)
+	_, err = questionsService.SaveQuestion(user.ID, questionText, correctAnswer, trainingID)
 
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+save+question", http.StatusSeeOther)
@@ -66,8 +85,16 @@ func SaveQuestion(w http.ResponseWriter, r *http.Request) {
 func EditQuestion(w http.ResponseWriter, r *http.Request) {
 	errorUtils.MethodNotAllowed_error(w, r)
 
+	email := r.Context().Value(authMiddleware.UserEmailKey).(string)
+	user, err := usersService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("User not found")
+		http.Redirect(w, r, "/error?message=User+not+found", http.StatusSeeOther)
+		return
+	}
+
 	// Parse form values
-	err := r.ParseForm()
+	err = r.ParseForm()
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
 		return
@@ -100,7 +127,7 @@ func EditQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add question to the database
-	_, err = questionsService.EditQuestion(ID, questionText, correctAnswer, trainingID)
+	_, err = questionsService.EditQuestion(user.ID, ID, questionText, correctAnswer, trainingID)
 
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+save+question", http.StatusSeeOther)
@@ -114,15 +141,22 @@ func EditQuestion(w http.ResponseWriter, r *http.Request) {
 func DeleteQuestion(w http.ResponseWriter, r *http.Request) {
 	errorUtils.MethodNotAllowed_error(w, r)
 
+	email := r.Context().Value(authMiddleware.UserEmailKey).(string)
+	user, err := usersService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("User not found")
+		http.Redirect(w, r, "/error?message=User+not+found", http.StatusSeeOther)
+		return
+	}
+
 	IDStr := r.FormValue("ID")
-    println("IDStr", IDStr)
 	id, err := strconv.Atoi(IDStr)
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Invalid+question+ID", http.StatusSeeOther)
 		return
 	}
 
-	err = questionsService.DeleteQuestion(id)
+	err = questionsService.DeleteQuestion(user.ID, id)
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Error+deleting+question", http.StatusSeeOther)
 		return

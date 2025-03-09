@@ -48,7 +48,9 @@ func InitDB() *sql.DB {
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         description TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        user_id INT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
     );
   `)
 	if err != nil {
@@ -65,6 +67,8 @@ func InitDB() *sql.DB {
             question_text TEXT NOT NULL,
             correct_answer TEXT NOT NULL,
             training_id INT NOT NULL,
+            user_id INT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id),
             FOREIGN KEY (training_id) REFERENCES trainings(id)
     );
   `)
@@ -83,6 +87,8 @@ func InitDB() *sql.DB {
         user_answer TEXT NOT NULL,
         feedback VARCHAR(20),   
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        user_id INT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id),
         FOREIGN KEY (question_id) REFERENCES questions(id)
     );
   `)
@@ -93,7 +99,6 @@ func InitDB() *sql.DB {
 	if err != nil {
 		log.Fatal("Error executing answers table statement:", err)
 	}
-
 
 	DB.SetMaxOpenConns(50)
 	DB.SetMaxIdleConns(50)

@@ -1,17 +1,28 @@
 package trainingsController
 
 import (
+	"log"
 	"net/http"
-	"qaa/utils/errorUtils"
+	"qaa/middlewares/authMiddleware"
 	"qaa/services/trainingsService"
+	"qaa/services/usersService"
+	"qaa/utils/errorUtils"
 	"strconv"
 )
 
 func SaveTraining(w http.ResponseWriter, r *http.Request) {
 	errorUtils.MethodNotAllowed_error(w, r)
 
+	email := r.Context().Value(authMiddleware.UserEmailKey).(string)
+	user, err := usersService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("User not found")
+		http.Redirect(w, r, "/error?message=User+not+found", http.StatusSeeOther)
+		return
+	}
+
 	// Parse form values
-	err := r.ParseForm()
+	err = r.ParseForm()
 	if err != nil {
         http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
 		return
@@ -28,7 +39,7 @@ func SaveTraining(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add training to the database
-	_, err = trainingsService.SaveTraining(name, description)
+	_, err = trainingsService.SaveTraining(user.ID, name, description)
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+save+training", http.StatusSeeOther)
 		return
@@ -41,8 +52,16 @@ func SaveTraining(w http.ResponseWriter, r *http.Request) {
 func EditTraining(w http.ResponseWriter, r *http.Request) {
 	errorUtils.MethodNotAllowed_error(w, r)
 
+	email := r.Context().Value(authMiddleware.UserEmailKey).(string)
+	user, err := usersService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("User not found")
+		http.Redirect(w, r, "/error?message=User+not+found", http.StatusSeeOther)
+		return
+	}
+
 	// Parse form values
-	err := r.ParseForm()
+	err = r.ParseForm()
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
 		return
@@ -66,7 +85,7 @@ func EditTraining(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add training to the database
-	_, err = trainingsService.EditTraining(ID, name, description)
+	_, err = trainingsService.EditTraining(user.ID, ID, name, description)
 
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+save+training", http.StatusSeeOther)
@@ -80,6 +99,14 @@ func EditTraining(w http.ResponseWriter, r *http.Request) {
 func DeleteTraining(w http.ResponseWriter, r *http.Request) {
 	errorUtils.MethodNotAllowed_error(w, r)
 
+	email := r.Context().Value(authMiddleware.UserEmailKey).(string)
+	user, err := usersService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("User not found")
+		http.Redirect(w, r, "/error?message=User+not+found", http.StatusSeeOther)
+		return
+	}
+
 	IDStr := r.FormValue("ID")
 	id, err := strconv.Atoi(IDStr)
 	if err != nil {
@@ -87,7 +114,7 @@ func DeleteTraining(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = trainingsService.DeleteTraining(id)
+	err = trainingsService.DeleteTraining(user.ID, id)
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Error+deleting+training", http.StatusSeeOther)
 		return

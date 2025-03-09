@@ -1,17 +1,28 @@
 package answersController
 
 import (
+	"log"
 	"net/http"
-	"qaa/utils/errorUtils"
+	"qaa/middlewares/authMiddleware"
 	"qaa/services/answersService"
+	"qaa/services/usersService"
+	"qaa/utils/errorUtils"
 	"strconv"
 )
 
 func SaveAnswer(w http.ResponseWriter, r *http.Request) {
 	errorUtils.MethodNotAllowed_error(w, r)
 
+	email := r.Context().Value(authMiddleware.UserEmailKey).(string)
+	user, err := usersService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("User not found")
+		http.Redirect(w, r, "/error?message=User+not+found", http.StatusSeeOther)
+		return
+	}
+
 	// Parse form values
-	err := r.ParseForm()
+	err = r.ParseForm()
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
 		return
@@ -35,7 +46,7 @@ func SaveAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add answer to the database
-    newAnswer, err := answersService.SaveAnswer(1, questionId, answer)
+    newAnswer, err := answersService.SaveAnswer(user.ID, questionId, answer)
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+save+question", http.StatusSeeOther)
 		return
@@ -47,6 +58,14 @@ func SaveAnswer(w http.ResponseWriter, r *http.Request) {
 
 func UpdateFeedbackOnAnswer(w http.ResponseWriter, r *http.Request) {
 	errorUtils.MethodNotAllowed_error(w, r)
+
+	email := r.Context().Value(authMiddleware.UserEmailKey).(string)
+	user, err := usersService.GetUserByEmail(email)
+	if err != nil {
+		log.Println("User not found")
+		http.Redirect(w, r, "/error?message=User+not+found", http.StatusSeeOther)
+		return
+	}
 
   // Parse the form data
     if err := r.ParseForm(); err != nil {
@@ -72,7 +91,7 @@ func UpdateFeedbackOnAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = answersService.UpdateFeedbackOnAnswer(answerId, feedback)
+	err = answersService.UpdateFeedbackOnAnswer(user.ID, answerId, feedback)
 
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+update+answer", http.StatusSeeOther)

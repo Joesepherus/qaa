@@ -36,11 +36,11 @@ func protectedHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the protected area!")
 }
 
-func isLoggedIn(user *userTypes.User, w http.ResponseWriter, r *http.Request) {
+func isLoggedIn(user *userTypes.User, err error, w http.ResponseWriter, r *http.Request) bool {
 	if user == nil {
-		http.Redirect(w, r, "/error?message=You+need+to+be+logged+in", http.StatusSeeOther)
-		return
+		return false
 	}
+	return true
 }
 
 func PageHandler(w http.ResponseWriter, r *http.Request) {
@@ -57,93 +57,75 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email, ok := r.Context().Value(authMiddleware.UserEmailKey).(string)
-	user, _ := usersService.GetUserByEmail(email)
+	user, err := usersService.GetUserByEmail(email)
+	loggedIn := isLoggedIn(user, err, w, r)
 
-	switch r.URL.Path {
-	case "/":
-		templateLocation = templates.BaseLocation + "/index.html"
-		pageTitle = "Trading Alerts"
-	case "/random":
-		isLoggedIn(user, w, r)
-
-		question, err := questionsService.GetRandomQuestion()
-		if err == nil {
-			data["Question"] = question
-		}
-
-		trainings, err := trainingsService.GetTrainings()
-		if err == nil {
-			data["Trainings"] = trainings
-		}
-
-		templateLocation = templates.BaseLocation + "/random.html"
-		pageTitle = "Random Question"
-	case "/questions":
-		isLoggedIn(user, w, r)
-
-		questions, err := questionsService.GetQuestions()
-		if err == nil {
-			data["Questions"] = questions
-		}
-
-		trainings, err := trainingsService.GetTrainings()
-		if err == nil {
-			data["Trainings"] = trainings
-		}
-
-		templateLocation = templates.BaseLocation + "/questions.html"
-		pageTitle = "Questions"
-	case "/trainings":
-		isLoggedIn(user, w, r)
-
-		trainings, err := trainingsService.GetTrainings()
-		if err == nil {
-			data["Trainings"] = trainings
-		}
-
-		templateLocation = templates.BaseLocation + "/trainings.html"
-		pageTitle = "Trainings"
-	case "/training-saved":
-		isLoggedIn(user, w, r)
-
-		templateLocation = templates.BaseLocation + "/training-saved.html"
-		pageTitle = "Training Saved"
-	case "/feedback":
-		isLoggedIn(user, w, r)
-
-		pathParts := strings.Split(r.URL.Path, "/")
-		if len(pathParts) < 3 || pathParts[1] != "feedback" {
-			http.Error(w, "Invalid URL format", http.StatusBadRequest)
+	if !loggedIn {
+		switch r.URL.Path {
+		case "/":
+			templateLocation = templates.BaseLocation + "/index.html"
+			pageTitle = "Trading Alerts"
+		case "/health":
+			healthHandler(w)
 			return
+		case "/error":
+			templateLocation = templates.BaseLocation + "/error.html"
+			pageTitle = "Error"
+			message := r.URL.Query().Get("message")
+			data["Message"] = message
+		default:
+			templateLocation = templates.BaseLocation + "/404.html"
+			pageTitle = "Page not found"
 		}
-
-		answerIdStr := pathParts[2]
-		answerId, err := strconv.Atoi(answerIdStr)
-
-		answer, err := answersService.GetAnswerById(answerId)
-		if err == nil {
-			data["Answer"] = answer
+	} else {
+		if ok {
+			data["Email"] = email
 		}
+		switch r.URL.Path {
+		case "/":
+			templateLocation = templates.BaseLocation + "/index.html"
+			pageTitle = "Trading Alerts"
+		case "/random":
 
-		question, err := questionsService.GetQuestionById(answer.QuestionID)
-		if err == nil {
-			data["Question"] = question
-		}
+			question, err := questionsService.GetRandomQuestion(user.ID)
+			if err == nil {
+				data["Question"] = question
+			}
 
-		templateLocation = templates.BaseLocation + "/feedback.html"
-		pageTitle = "Feedback"
-	case "/health":
-		healthHandler(w)
-		return
-	case "/error":
-		templateLocation = templates.BaseLocation + "/error.html"
-		pageTitle = "Error"
-		message := r.URL.Query().Get("message")
-		data["Message"] = message
-	default:
-		// Handle /feedback/{number}
-		if strings.HasPrefix(r.URL.Path, "/feedback/") {
-			isLoggedIn(user, w, r)
+			trainings, err := trainingsService.GetTrainings(user.ID)
+			if err == nil {
+				data["Trainings"] = trainings
+			}
+
+			templateLocation = templates.BaseLocation + "/random.html"
+			pageTitle = "Random Question"
+		case "/questions":
+			questions, err := questionsService.GetQuestions(user.ID)
+			if err == nil {
+				data["Questions"] = questions
+			}
+
+			trainings, err := trainingsService.GetTrainings(user.ID)
+			if err == nil {
+				data["Trainings"] = trainings
+			}
+
+			templateLocation = templates.BaseLocation + "/questions.html"
+			pageTitle = "Questions"
+		case "/trainings":
+
+			trainings, err := trainingsService.GetTrainings(user.ID)
+			if err == nil {
+				data["Trainings"] = trainings
+			}
+
+			templateLocation = templates.BaseLocation + "/trainings.html"
+			pageTitle = "Trainings"
+		case "/training-saved":
+
+			templateLocation = templates.BaseLocation + "/training-saved.html"
+			pageTitle = "Training Saved"
+		case "/feedback":
 
 			pathParts := strings.Split(r.URL.Path, "/")
 			if len(pathParts) < 3 || pathParts[1] != "feedback" {
@@ -154,122 +136,138 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 			answerIdStr := pathParts[2]
 			answerId, err := strconv.Atoi(answerIdStr)
 
-			answer, err := answersService.GetAnswerById(answerId)
+			answer, err := answersService.GetAnswerById(user.ID, answerId)
 			if err == nil {
 				data["Answer"] = answer
 			}
 
-			if answer.Feedback != nil {
-				http.Redirect(w, r, "/random", http.StatusSeeOther)
-			}
-
-			question, err := questionsService.GetQuestionById(answer.QuestionID)
+			question, err := questionsService.GetQuestionById(user.ID, answer.QuestionID)
 			if err == nil {
 				data["Question"] = question
-				data["CorrectAnswer"] = template.HTML(question.CorrectAnswer)
 			}
 
 			templateLocation = templates.BaseLocation + "/feedback.html"
 			pageTitle = "Feedback"
+		default:
+			// Handle /feedback/{number}
+			if strings.HasPrefix(r.URL.Path, "/feedback/") {
 
-		}
-		if strings.HasPrefix(r.URL.Path, "/random/") {
-			isLoggedIn(user, w, r)
-			trainings, err := trainingsService.GetTrainings()
-			if err == nil {
-				data["Trainings"] = trainings
-			}
+				pathParts := strings.Split(r.URL.Path, "/")
+				if len(pathParts) < 3 || pathParts[1] != "feedback" {
+					http.Error(w, "Invalid URL format", http.StatusBadRequest)
+					return
+				}
 
-			pathParts := strings.Split(r.URL.Path, "/")
-			if len(pathParts) < 3 || pathParts[1] != "random" {
-				http.Error(w, "Invalid URL format", http.StatusBadRequest)
-				return
-			}
+				answerIdStr := pathParts[2]
+				answerId, err := strconv.Atoi(answerIdStr)
 
-			trainingIdStr := pathParts[2]
-			trainingId, err := strconv.Atoi(trainingIdStr)
+				answer, err := answersService.GetAnswerById(user.ID, answerId)
+				if err == nil {
+					data["Answer"] = answer
+				}
 
-			training, err := trainingsService.GetTrainingById(trainingId)
-			var question questionsTypes.Question
+				if answer.Feedback != nil {
+					http.Redirect(w, r, "/random", http.StatusSeeOther)
+				}
 
-			if training.ID != 0 {
-				question, err = questionsService.GetRandomQuestionWithTraining(trainingId)
-				data["TrainingId"] = trainingId
+				question, err := questionsService.GetQuestionById(user.ID, answer.QuestionID)
+				if err == nil {
+					data["Question"] = question
+					data["CorrectAnswer"] = template.HTML(question.CorrectAnswer)
+				}
+
+				templateLocation = templates.BaseLocation + "/feedback.html"
+				pageTitle = "Feedback"
+
+			}else if strings.HasPrefix(r.URL.Path, "/random/") {
+				trainings, err := trainingsService.GetTrainings(user.ID)
+				if err == nil {
+					data["Trainings"] = trainings
+				}
+
+				pathParts := strings.Split(r.URL.Path, "/")
+				if len(pathParts) < 3 || pathParts[1] != "random" {
+					http.Error(w, "Invalid URL format", http.StatusBadRequest)
+					return
+				}
+
+				trainingIdStr := pathParts[2]
+				trainingId, err := strconv.Atoi(trainingIdStr)
+
+				training, err := trainingsService.GetTrainingById(user.ID, trainingId)
+				var question questionsTypes.Question
+
+				if training.ID != 0 {
+					question, err = questionsService.GetRandomQuestionWithTraining(user.ID, trainingId)
+					data["TrainingId"] = trainingId
+				} else {
+					question, err = questionsService.GetRandomQuestion(user.ID)
+				}
+
+				if err == nil {
+					data["Question"] = question
+				}
+
+				templateLocation = templates.BaseLocation + "/random.html"
+				pageTitle = "Random Question"
+			} else if strings.HasPrefix(r.URL.Path, "/questions/") {
+				questions, err := questionsService.GetQuestions(user.ID)
+				if err == nil {
+					data["Questions"] = questions
+				}
+
+				trainings, err := trainingsService.GetTrainings(user.ID)
+				if err == nil {
+					data["Trainings"] = trainings
+				}
+
+				pathParts := strings.Split(r.URL.Path, "/")
+				if len(pathParts) < 3 || pathParts[1] != "questions" {
+					http.Error(w, "Invalid URL format", http.StatusBadRequest)
+					return
+				}
+
+				questionIdStr := pathParts[2]
+				questionId, err := strconv.Atoi(questionIdStr)
+
+				selectedQuestion, err := questionsService.GetQuestionById(user.ID, questionId)
+				if err != nil {
+					http.Redirect(w, r, "/questions", http.StatusSeeOther)
+				}
+				data["SelectedQuestion"] = selectedQuestion
+
+				templateLocation = templates.BaseLocation + "/questions.html"
+				pageTitle = "Questions"
+			} else if strings.HasPrefix(r.URL.Path, "/trainings/") {
+				trainings, err := trainingsService.GetTrainings(user.ID)
+				if err == nil {
+					data["Trainings"] = trainings
+				}
+
+				pathParts := strings.Split(r.URL.Path, "/")
+				if len(pathParts) < 3 || pathParts[1] != "trainings" {
+					http.Error(w, "Invalid URL format", http.StatusBadRequest)
+					return
+				}
+
+				trainingIdStr := pathParts[2]
+				trainingId, err := strconv.Atoi(trainingIdStr)
+
+				selectedTraining, err := trainingsService.GetTrainingById(user.ID, trainingId)
+				if err != nil {
+					http.Redirect(w, r, "/trainings", http.StatusSeeOther)
+				}
+				data["SelectedTraining"] = selectedTraining
+
+				templateLocation = templates.BaseLocation + "/trainings.html"
+				pageTitle = "Trainings"
 			} else {
-				question, err = questionsService.GetRandomQuestion()
+				templateLocation = templates.BaseLocation + "/404.html"
+				pageTitle = "Page not found"
 			}
 
-			if err == nil {
-				data["Question"] = question
-			}
-
-			templateLocation = templates.BaseLocation + "/random.html"
-			pageTitle = "Random Question"
 		}
-		if strings.HasPrefix(r.URL.Path, "/questions/") {
-			isLoggedIn(user, w, r)
-			questions, err := questionsService.GetQuestions()
-			if err == nil {
-				data["Questions"] = questions
-			}
-
-			trainings, err := trainingsService.GetTrainings()
-			if err == nil {
-				data["Trainings"] = trainings
-			}
-
-			pathParts := strings.Split(r.URL.Path, "/")
-			if len(pathParts) < 3 || pathParts[1] != "questions" {
-				http.Error(w, "Invalid URL format", http.StatusBadRequest)
-				return
-			}
-
-			questionIdStr := pathParts[2]
-			questionId, err := strconv.Atoi(questionIdStr)
-
-			selectedQuestion, err := questionsService.GetQuestionById(questionId)
-			if err != nil {
-				http.Redirect(w, r, "/questions", http.StatusSeeOther)
-			}
-			data["SelectedQuestion"] = selectedQuestion
-
-			templateLocation = templates.BaseLocation + "/questions.html"
-			pageTitle = "Questions"
-		}
-		if strings.HasPrefix(r.URL.Path, "/trainings/") {
-			isLoggedIn(user, w, r)
-			trainings, err := trainingsService.GetTrainings()
-			if err == nil {
-				data["Trainings"] = trainings
-			}
-
-			pathParts := strings.Split(r.URL.Path, "/")
-			if len(pathParts) < 3 || pathParts[1] != "trainings" {
-				http.Error(w, "Invalid URL format", http.StatusBadRequest)
-				return
-			}
-
-			trainingIdStr := pathParts[2]
-			trainingId, err := strconv.Atoi(trainingIdStr)
-
-			selectedTraining, err := trainingsService.GetTrainingById(trainingId)
-			if err != nil {
-				http.Redirect(w, r, "/trainings", http.StatusSeeOther)
-			}
-			data["SelectedTraining"] = selectedTraining
-
-			templateLocation = templates.BaseLocation + "/trainings.html"
-			pageTitle = "Trainings"
-		} else {
-			templateLocation = templates.BaseLocation + "/404.html"
-			pageTitle = "Page not found"
-		}
-
 	}
-	if ok {
-		data["Email"] = email
-	}
-
 	data["Title"] = pageTitle
 	data["Content"] = templateLocation
 

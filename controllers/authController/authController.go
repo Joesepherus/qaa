@@ -82,7 +82,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Redirect to user dashboard or home page after successful login
-	http.Redirect(w, r, "/alerts", http.StatusSeeOther)
+	http.Redirect(w, r, "/questions", http.StatusSeeOther)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
