@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"qaa/errorUtils"
 	"qaa/services/trainingsService"
+	"strconv"
 )
 
 func SaveTraining(w http.ResponseWriter, r *http.Request) {
@@ -34,5 +35,63 @@ func SaveTraining(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Success response
+	http.Redirect(w, r, "/trainings", http.StatusSeeOther)
+}
+
+func EditTraining(w http.ResponseWriter, r *http.Request) {
+	errorUtils.MethodNotAllowed_error(w, r)
+
+	// Parse form values
+	err := r.ParseForm()
+	if err != nil {
+		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
+		return
+	}
+
+	// Extract form values
+	IDStr := r.FormValue("ID")
+	name := r.FormValue("name")
+	description := r.FormValue("description")
+
+	ID, err := strconv.Atoi(IDStr)
+	if err != nil {
+		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
+		return
+	}
+
+	// Example validation
+	if name == "" || description == "" || ID <= 0 {
+		http.Redirect(w, r, "/error?message=Failed+to+parse+form+data", http.StatusSeeOther)
+		return
+	}
+
+	// Add training to the database
+	_, err = trainingsService.EditTraining(ID, name, description)
+
+	if err != nil {
+		http.Redirect(w, r, "/error?message=Failed+to+save+training", http.StatusSeeOther)
+		return
+	}
+
+	// Success response
+	http.Redirect(w, r, "/trainings", http.StatusSeeOther)
+}
+
+func DeleteTraining(w http.ResponseWriter, r *http.Request) {
+	errorUtils.MethodNotAllowed_error(w, r)
+
+	IDStr := r.FormValue("ID")
+	id, err := strconv.Atoi(IDStr)
+	if err != nil {
+		http.Redirect(w, r, "/error?message=Invalid+training+ID", http.StatusSeeOther)
+		return
+	}
+
+	err = trainingsService.DeleteTraining(id)
+	if err != nil {
+		http.Redirect(w, r, "/error?message=Error+deleting+training", http.StatusSeeOther)
+		return
+	}
+
 	http.Redirect(w, r, "/trainings", http.StatusSeeOther)
 }

@@ -101,8 +101,8 @@ func EditQuestion(ID int, questionText string, correctAnswer string, trainingID 
 	).Scan(&updatedQuestion.ID, &updatedQuestion.QuestionText, &updatedQuestion.CorrectAnswer, &updatedQuestion.TrainingID)
 
 	if err != nil {
-		log.Printf("error inserting question: %v", err)
-		return questionsTypes.Question{}, fmt.Errorf("error inserting question: %v", err)
+		log.Printf("error editing question: %v", err)
+		return questionsTypes.Question{}, fmt.Errorf("error editing question: %v", err)
 	}
 
 	return updatedQuestion, nil

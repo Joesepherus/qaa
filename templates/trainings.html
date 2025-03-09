@@ -8,9 +8,9 @@
         <div><button onclick="openCreateTrainingModal()">create training</button></div>
         <div id="trainingsTable" class="grid-container">
           <div class="grid-header">
-            <div class="grid-item header-item">Training</div>
             <div class="grid-item header-item">Name</div>
             <div class="grid-item header-item">Description</div>
+            <div class="grid-item header-item">Actions</div>
           </div>
 
           {{range .Trainings}}
@@ -22,6 +22,8 @@
                 <input type="hidden" name="id" value="{{.ID}}">
                 <button type="submit"
                   style="color: red; background: none; border: none; cursor: pointer; padding: 0;">❌</button>
+                <button type="button" onclick="selectTraining({{.ID}})"
+                  style="color: red; background: none; border: none; cursor: pointer; padding: 0;">✍️</button>
               </form>
             </div>
           </div>
@@ -55,6 +57,30 @@
       </div>
     </div>
   </div>
+
+  <div id="edit-training-modal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeEditTrainingModal()">&times;</span>
+      <div id="edit-training-form" class="active-form">
+        <h2>Edit Training</h2>
+        <form action="/api/trainings/edit-training" method="post">
+          <input type="hidden" name="ID" value="{{.SelectedTraining.ID}}">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Enter name" required
+              value={{.SelectedTraining.Name}} />
+          </div>
+          <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" placeholder="Enter description" required
+              value={{.SelectedTraining.Description}} />
+          </div>
+          <button type="submit" class="submit-btn">Edit Training</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <style>

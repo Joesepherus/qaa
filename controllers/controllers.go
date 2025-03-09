@@ -191,7 +191,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 				data["Trainings"] = trainings
 			}
 
-	        pathParts := strings.Split(r.URL.Path, "/")
+			pathParts := strings.Split(r.URL.Path, "/")
 			if len(pathParts) < 3 || pathParts[1] != "questions" {
 				http.Error(w, "Invalid URL format", http.StatusBadRequest)
 				return
@@ -201,16 +201,40 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 			questionId, err := strconv.Atoi(questionIdStr)
 
 			selectedQuestion, err := questionsService.GetQuestionById(questionId)
-            println("selectedQuestion", selectedQuestion.TrainingID)
-			if err == nil {
-				data["SelectedQuestion"] = selectedQuestion
+			if err != nil {
+				http.Redirect(w, r, "/questions", http.StatusSeeOther)
 			}
+			data["SelectedQuestion"] = selectedQuestion
 
 			templateLocation = templates.BaseLocation + "/questions.html"
 			pageTitle = "Questions"
 		} else {
 			templateLocation = templates.BaseLocation + "/404.html"
 			pageTitle = "Page not found"
+		}
+		if strings.HasPrefix(r.URL.Path, "/trainings/") {
+			trainings, err := trainingsService.GetTrainings()
+			if err == nil {
+				data["Trainings"] = trainings
+			}
+
+			pathParts := strings.Split(r.URL.Path, "/")
+			if len(pathParts) < 3 || pathParts[1] != "trainings" {
+				http.Error(w, "Invalid URL format", http.StatusBadRequest)
+				return
+			}
+
+			trainingIdStr := pathParts[2]
+			trainingId, err := strconv.Atoi(trainingIdStr)
+
+			selectedTraining, err := trainingsService.GetTrainingById(trainingId)
+			if err != nil {
+				http.Redirect(w, r, "/trainings", http.StatusSeeOther)
+			}
+			data["SelectedTraining"] = selectedTraining
+
+			templateLocation = templates.BaseLocation + "/trainings.html"
+			pageTitle = "Trainings"
 		}
 	}
 
@@ -244,6 +268,8 @@ func RestApi() {
 	http.HandleFunc("/api/questions/edit-question", questionsController.EditQuestion)
 	http.HandleFunc("/api/questions/delete-question", questionsController.DeleteQuestion)
 	http.HandleFunc("/api/trainings/save-training", trainingsController.SaveTraining)
+	http.HandleFunc("/api/trainings/edit-training", trainingsController.EditTraining)
+	http.HandleFunc("/api/trainings/delete-training", trainingsController.DeleteTraining)
 	http.Handle("/", http.HandlerFunc(PageHandler))
 
 	// Serve static files (CSS)

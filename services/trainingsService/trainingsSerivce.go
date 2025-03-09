@@ -67,3 +67,40 @@ func SaveTraining(name string, description string) (trainingsTypes.Training, err
 
 	return savedTraining, nil
 }
+
+func EditTraining(ID int, name string, description string) (trainingsTypes.Training, error) {
+	var updatedTraining trainingsTypes.Training
+
+	err := db.QueryRow(
+		"UPDATE trainings SET name = $1, description = $2 WHERE id = $3 RETURNING id, name, description",
+		name, description, ID,
+	).Scan(&updatedTraining.ID, &updatedTraining.Name, &updatedTraining.Description)
+
+	if err != nil {
+		log.Printf("error editing training: %v", err)
+		return trainingsTypes.Training{}, fmt.Errorf("error editing training: %v", err)
+	}
+
+	return updatedTraining, nil
+}
+
+func DeleteTraining(ID int) error {
+    result, err := db.Exec("DELETE FROM trainings WHERE id = $1", ID)
+    if err != nil {
+        log.Printf("error deleting training with ID %d: %v", ID, err)
+        return fmt.Errorf("error deleting training: %v", err)
+    }
+
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        log.Printf("error checking rows affected for ID %d: %v", ID, err)
+        return fmt.Errorf("error checking deletion: %v", err)
+    }
+    if rowsAffected == 0 {
+        log.Printf("no training found with ID %d", ID)
+        return fmt.Errorf("no training found with ID %d", ID)
+    }
+
+    return nil
+}
+

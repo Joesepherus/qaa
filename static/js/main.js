@@ -34,7 +34,6 @@ function closeEditQuestionModal() {
 }
 
 function selectQuestion(questionId) {
-  console.log("questionId", questionId);
   window.location.href = "/questions/" + questionId
 }
 
@@ -44,8 +43,32 @@ function isQuestionUrl() {
   return regex.test(pathname);
 }
 
+function openEditTrainingModal() {
+  const modal = document.getElementById("edit-training-modal");
+  modal.classList.add("show");
+}
+
+function closeEditTrainingModal() {
+  const modal = document.getElementById("edit-training-modal");
+  modal.classList.remove("show");
+}
+
+function selectTraining(trainingId) {
+  window.location.href = "/trainings/" + trainingId
+}
+
+function isTrainingURL() {
+  const pathname = window.location.pathname;
+  const regex = /^\/trainings\/\d+$/;
+  return regex.test(pathname);
+}
+
 window.onload = function() {
   if (isQuestionUrl()) {
     openEditQuestionModal()
+  }
+
+  if (isTrainingURL()) {
+    openEditTrainingModal()
   }
 }
