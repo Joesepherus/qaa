@@ -52,6 +52,19 @@ func GetRandomQuestion() (questionsTypes.Question, error) {
 	return question, nil
 }
 
+
+func GetRandomQuestionWithTraining(trainingID int) (questionsTypes.Question, error) {
+	var question questionsTypes.Question
+
+	row := db.QueryRow("SELECT id, question_text, correct_answer FROM questions WHERE training_id = $1 ORDER BY RANDOM() LIMIT 1", trainingID)
+
+	if err := row.Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer); err != nil {
+		return questionsTypes.Question{}, fmt.Errorf("failed to scan question: %v", err)
+	}
+
+	return question, nil
+}
+
 func GetQuestionById(questionID int) (questionsTypes.Question, error) {
 	var question questionsTypes.Question
 

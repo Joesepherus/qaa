@@ -133,7 +133,7 @@ footer p {
   background: #fff;
 }
 
-.form-group select {
+select {
   padding: 10px;               /* Padding for the content area */
   border: 1px solid #ccc;
   border-radius: 4px;

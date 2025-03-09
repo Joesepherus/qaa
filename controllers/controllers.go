@@ -16,6 +16,7 @@ import (
 	"qaa/services/questionsService"
 	"qaa/services/trainingsService"
 	"qaa/templates"
+	"qaa/types/questionsTypes"
 	"strconv"
 )
 
@@ -52,6 +53,11 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		question, err := questionsService.GetRandomQuestion()
 		if err == nil {
 			data["Question"] = question
+		}
+
+		trainings, err := trainingsService.GetTrainings()
+		if err == nil {
+			data["Trainings"] = trainings
 		}
 
 		templateLocation = templates.BaseLocation + "/random.html"
@@ -144,6 +150,38 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 			templateLocation = templates.BaseLocation + "/feedback.html"
 			pageTitle = "Feedback"
 
+		}
+		if strings.HasPrefix(r.URL.Path, "/random/") {
+			trainings, err := trainingsService.GetTrainings()
+			if err == nil {
+				data["Trainings"] = trainings
+			}
+
+			pathParts := strings.Split(r.URL.Path, "/")
+			if len(pathParts) < 3 || pathParts[1] != "random" {
+				http.Error(w, "Invalid URL format", http.StatusBadRequest)
+				return
+			}
+
+			trainingIdStr := pathParts[2]
+			trainingId, err := strconv.Atoi(trainingIdStr)
+
+			training, err := trainingsService.GetTrainingById(trainingId)
+			var question questionsTypes.Question
+
+			if training.ID != 0 {
+				question, err = questionsService.GetRandomQuestionWithTraining(trainingId)
+                data["TrainingId"] = trainingId
+			} else {
+				question, err = questionsService.GetRandomQuestion()
+			}
+
+			if err == nil {
+				data["Question"] = question
+			}
+
+			templateLocation = templates.BaseLocation + "/random.html"
+			pageTitle = "Random Question"
 		} else {
 			templateLocation = templates.BaseLocation + "/404.html"
 			pageTitle = "Page not found"

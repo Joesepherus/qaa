@@ -3,38 +3,42 @@
 <div class="content">
   <div class="page">
     <div class="landing-page">
+
+      <select id="training-select" name="trainingID" onchange="selectTraining()">
+        <option value="">Select a training</option>
+        {{range .Trainings}}
+        <option value="{{.ID}}" {{if eq .ID $.TrainingId}}selected{{end}}>{{.Name}}</option>
+        {{end}}
+      </select>
+
       <h2>Random Question</h2>
       <div class="question-container">
         {{ if .Question }}
-          <form class="question-form" action="api/answers/save-answer" method="POST">
-            <div class="question-text">
-              <label>Question:</label>
-              <p>{{ .Question.QuestionText }}</p>
-            </div>
-            
-            <div class="answer-section">
-              <label for="answer">Your Answer:</label>
-              <textarea 
-                id="answer" 
-                name="answer" 
-                rows="4" 
-                class="answer-input"
-                placeholder="Type your answer here..."
-                required
-              ></textarea>
-            </div>
+        <form class="question-form" action="api/answers/save-answer" method="POST">
+          <div class="question-text">
+            <label>Question:</label>
+            <p>{{ .Question.QuestionText }}</p>
+          </div>
 
-            <!-- Hidden field to send question ID -->
-            <input type="hidden" name="question_id" value="{{ .Question.ID }}">
 
-            <div class="button-group">
-              <button type="submit" class="btn btn-submit">Submit Answer</button>
-              <a href="/random" class="btn btn-skip">Skip Question</a>
-            </div>
-          </form>
+          <div class="answer-section">
+            <label for="answer">Your Answer:</label>
+            <textarea id="answer" name="answer" rows="4" class="answer-input" placeholder="Type your answer here..."
+              required></textarea>
+          </div>
+
+          <!-- Hidden field to send question ID -->
+          <input type="hidden" name="question_id" value="{{ .Question.ID }}">
+
+          <div class="button-group">
+            <button type="submit" class="btn btn-submit">Submit Answer</button>
+            <a href="{{if $.TrainingId}}/random/{{$.TrainingId}}{{else}}/random/{{end}}"
+              class="btn btn-skip">Skip Question</a>
+          </div>
+        </form>
         {{ else }}
-          <p>No question available at the moment.</p>
-          <a href="/random" class="btn btn-retry">Try Again</a>
+        <p>No question available at the moment.</p>
+        <a href="/random" class="btn btn-retry">Try Again</a>
         {{ end }}
       </div>
     </div>
@@ -102,13 +106,15 @@
     background-color: #45a049;
   }
 
-  .btn-skip, .btn-retry {
+  .btn-skip,
+  .btn-retry {
     background-color: #f44336;
     color: white;
     border: none;
   }
 
-  .btn-skip:hover, .btn-retry:hover {
+  .btn-skip:hover,
+  .btn-retry:hover {
     background-color: #da190b;
   }
 </style>
