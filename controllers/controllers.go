@@ -12,11 +12,14 @@ import (
 	"qaa/controllers/answersController"
 	"qaa/controllers/questionsController"
 	"qaa/controllers/trainingsController"
+	"qaa/middlewares/authMiddleware"
 	"qaa/services/answersService"
 	"qaa/services/questionsService"
 	"qaa/services/trainingsService"
+	"qaa/services/usersService"
 	"qaa/templates"
 	"qaa/types/questionsTypes"
+	"qaa/types/userTypes"
 	"strconv"
 )
 
@@ -32,6 +35,13 @@ func protectedHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the protected area!")
 }
 
+func isLoggedIn(user *userTypes.User, w http.ResponseWriter, r *http.Request) {
+	if user == nil {
+		http.Redirect(w, r, "/error?message=You+need+to+be+logged+in", http.StatusSeeOther)
+		return
+	}
+}
+
 func PageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET") // Specifies the HTTP methods allowed.
 	w.Header().Set("X-Frame-Options", "DENY")                   // Prevents clickjacking
@@ -45,11 +55,16 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		// Add other default data here if needed
 	}
 
+	email, ok := r.Context().Value(authMiddleware.UserEmailKey).(string)
+	user, _ := usersService.GetUserByEmail(email)
+
 	switch r.URL.Path {
 	case "/":
 		templateLocation = templates.BaseLocation + "/index.html"
 		pageTitle = "Trading Alerts"
 	case "/random":
+		isLoggedIn(user, w, r)
+
 		question, err := questionsService.GetRandomQuestion()
 		if err == nil {
 			data["Question"] = question
@@ -63,6 +78,8 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		templateLocation = templates.BaseLocation + "/random.html"
 		pageTitle = "Random Question"
 	case "/questions":
+		isLoggedIn(user, w, r)
+
 		questions, err := questionsService.GetQuestions()
 		if err == nil {
 			data["Questions"] = questions
@@ -76,6 +93,8 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		templateLocation = templates.BaseLocation + "/questions.html"
 		pageTitle = "Questions"
 	case "/trainings":
+		isLoggedIn(user, w, r)
+
 		trainings, err := trainingsService.GetTrainings()
 		if err == nil {
 			data["Trainings"] = trainings
@@ -84,9 +103,13 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		templateLocation = templates.BaseLocation + "/trainings.html"
 		pageTitle = "Trainings"
 	case "/training-saved":
+		isLoggedIn(user, w, r)
+
 		templateLocation = templates.BaseLocation + "/training-saved.html"
 		pageTitle = "Training Saved"
 	case "/feedback":
+		isLoggedIn(user, w, r)
+
 		pathParts := strings.Split(r.URL.Path, "/")
 		if len(pathParts) < 3 || pathParts[1] != "feedback" {
 			http.Error(w, "Invalid URL format", http.StatusBadRequest)
@@ -113,12 +136,13 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	case "/error":
 		templateLocation = templates.BaseLocation + "/error.html"
-		pageTitle = "Error - Trading Alerts"
+		pageTitle = "Error"
 		message := r.URL.Query().Get("message")
 		data["Message"] = message
 	default:
 		// Handle /feedback/{number}
 		if strings.HasPrefix(r.URL.Path, "/feedback/") {
+			isLoggedIn(user, w, r)
 
 			pathParts := strings.Split(r.URL.Path, "/")
 			if len(pathParts) < 3 || pathParts[1] != "feedback" {
@@ -149,6 +173,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 		if strings.HasPrefix(r.URL.Path, "/random/") {
+			isLoggedIn(user, w, r)
 			trainings, err := trainingsService.GetTrainings()
 			if err == nil {
 				data["Trainings"] = trainings
@@ -181,6 +206,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 			pageTitle = "Random Question"
 		}
 		if strings.HasPrefix(r.URL.Path, "/questions/") {
+			isLoggedIn(user, w, r)
 			questions, err := questionsService.GetQuestions()
 			if err == nil {
 				data["Questions"] = questions
@@ -208,11 +234,9 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 
 			templateLocation = templates.BaseLocation + "/questions.html"
 			pageTitle = "Questions"
-		} else {
-			templateLocation = templates.BaseLocation + "/404.html"
-			pageTitle = "Page not found"
 		}
 		if strings.HasPrefix(r.URL.Path, "/trainings/") {
+			isLoggedIn(user, w, r)
 			trainings, err := trainingsService.GetTrainings()
 			if err == nil {
 				data["Trainings"] = trainings
@@ -235,7 +259,14 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 
 			templateLocation = templates.BaseLocation + "/trainings.html"
 			pageTitle = "Trainings"
+		} else {
+			templateLocation = templates.BaseLocation + "/404.html"
+			pageTitle = "Page not found"
 		}
+
+	}
+	if ok {
+		data["Email"] = email
 	}
 
 	data["Title"] = pageTitle
@@ -261,16 +292,16 @@ func RestApi() {
 		IdleTimeout:  15 * time.Second, // Max time for idle connections
 	}
 
-	http.HandleFunc("/api/questions/random", questionsController.GetRandomQuestion)
-	http.HandleFunc("/api/answers/save-answer", answersController.SaveAnswer)
-	http.HandleFunc("/api/answers/feedback", answersController.UpdateFeedbackOnAnswer)
-	http.HandleFunc("/api/questions/save-question", questionsController.SaveQuestion)
-	http.HandleFunc("/api/questions/edit-question", questionsController.EditQuestion)
-	http.HandleFunc("/api/questions/delete-question", questionsController.DeleteQuestion)
-	http.HandleFunc("/api/trainings/save-training", trainingsController.SaveTraining)
-	http.HandleFunc("/api/trainings/edit-training", trainingsController.EditTraining)
-	http.HandleFunc("/api/trainings/delete-training", trainingsController.DeleteTraining)
-	http.Handle("/", http.HandlerFunc(PageHandler))
+	http.Handle("/api/questions/random", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(questionsController.GetRandomQuestion)))
+	http.Handle("/api/questions/save-question", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(questionsController.SaveQuestion)))
+	http.Handle("/api/questions/edit-question", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(questionsController.EditQuestion)))
+	http.Handle("/api/questions/delete-question", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(questionsController.DeleteQuestion)))
+	http.Handle("/api/trainings/save-training", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(trainingsController.SaveTraining)))
+	http.Handle("/api/training/edit-training", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(trainingsController.EditTraining)))
+	http.Handle("/api/training/delete-training", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(trainingsController.DeleteTraining)))
+	http.Handle("/api/answers/feedback", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(answersController.UpdateFeedbackOnAnswer)))
+
+	http.Handle("/", authMiddleware.TokenCheckMiddleware(http.HandlerFunc(PageHandler)))
 
 	// Serve static files (CSS)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))

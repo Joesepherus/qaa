@@ -7,6 +7,7 @@ import (
 	"qaa/services/answersService"
 	"qaa/services/questionsService"
 	"qaa/services/trainingsService"
+	"qaa/services/usersService"
 	"qaa/templates"
 
 	_ "github.com/lib/pq"
@@ -24,6 +25,7 @@ func main() {
 	questionsService.SetDB(db)
     answersService.SetDB(db)
 	trainingsService.SetDB(db)
+	usersService.SetDB(db)
 
 	// start a new goroutine for the rest api endpoints
 	controllers.RestApi()
