@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math/rand"
 	"qaa/types/questionsTypes"
+	"time"
 )
 
 var db *sql.DB
@@ -48,6 +50,83 @@ func GetRandomQuestion(userID int) (questionsTypes.Question, error) {
 	if err := row.Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer); err != nil {
 		return questionsTypes.Question{}, fmt.Errorf("failed to scan question: %v", err)
 	}
+
+	return question, nil
+}
+
+func sampleQuestions(input []questionsTypes.Question, count int) []questionsTypes.Question {
+	if len(input) <= count {
+		return input
+	}
+
+	// Shuffle and take 'count' items
+	rand.Shuffle(len(input), func(i, j int) {
+		input[i], input[j] = input[j], input[i]
+	})
+	return input[:count]
+}
+
+func GetPrioritizedQuestion(userID int) (questionsTypes.Question, error) {
+	log.Println("get prioritized")
+	var final []questionsTypes.Question
+
+	type bucket struct {
+		feedback string
+		questions []questionsTypes.Question
+	}
+
+	// Fetch all questions with feedback in the last hour
+	query := `
+		SELECT q.id, q.question_text, q.correct_answer, a.feedback
+		FROM questions q
+		JOIN answers a ON q.id = a.question_id
+		WHERE a.user_id = $1
+		  AND a.created_at >= NOW() - INTERVAL '1 hour'
+	`
+	rows, err := db.Query(query, userID)
+
+	if err != nil {
+		return questionsTypes.Question{}, err
+	}
+	defer rows.Close()
+
+	// Bucketize questions by feedback
+	var incorrect, somewhat, correct []questionsTypes.Question
+
+	for rows.Next() {
+		var q questionsTypes.Question
+		var feedback string
+		if err := rows.Scan(&q.ID, &q.QuestionText, &q.CorrectAnswer, &feedback); err != nil {
+			return questionsTypes.Question{}, err
+		}
+
+		switch feedback {
+		case "incorrect":
+			incorrect = append(incorrect, q)
+		case "somewhat":
+			somewhat = append(somewhat, q)
+		case "correct":
+			correct = append(correct, q)
+		}
+	}
+
+	total := len(incorrect) + len(somewhat) + len(correct)
+println("incorrect", incorrect)
+println("correct", correct)
+	// Decide how many from each bucket based on percentages
+	desiredIncorrect := int(float64(total) * 0.6)
+	desiredSomewhat := int(float64(total) * 0.25)
+	desiredCorrect := total - desiredIncorrect - desiredSomewhat
+
+	// Sample from each bucket (up to available)
+	final = append(final, sampleQuestions(incorrect, desiredIncorrect)...)
+	final = append(final, sampleQuestions(somewhat, desiredSomewhat)...)
+	final = append(final, sampleQuestions(correct, desiredCorrect)...)
+
+	// If under total, top up with more random
+	// Pick one at random from the prioritized list
+	rand.Seed(time.Now().UnixNano())
+	question := final[rand.Intn(len(final))]
 
 	return question, nil
 }

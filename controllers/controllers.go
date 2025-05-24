@@ -87,7 +87,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 			pageTitle = "Trading Alerts"
 		case "/random":
 
-			question, err := questionsService.GetRandomQuestion(user.ID)
+			question, err := questionsService.GetPrioritizedQuestion(user.ID)
 			if err == nil {
 				data["Question"] = question
 			}

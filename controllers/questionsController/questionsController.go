@@ -20,7 +20,7 @@ func GetRandomQuestion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	question, err := questionsService.GetRandomQuestion(user.ID)
+	question, err := questionsService.GetPrioritizedQuestion(user.ID)
 
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+fetch+questions", http.StatusSeeOther)
