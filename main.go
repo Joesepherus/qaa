@@ -15,6 +15,8 @@ import (
 
 var db *sql.DB
 
+
+
 func main() {
 
 	templates.InitTemplates("./templates")

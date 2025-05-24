@@ -6,6 +6,7 @@ import (
 	"qaa/middlewares/authMiddleware"
 	"qaa/services/answersService"
 	"qaa/services/usersService"
+	"qaa/utils/cookieUtils"
 	"qaa/utils/errorUtils"
 	"strconv"
 )
@@ -46,14 +47,14 @@ func SaveAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add answer to the database
-    newAnswer, err := answersService.SaveAnswer(user.ID, questionId, answer)
+	newAnswer, err := answersService.SaveAnswer(user.ID, questionId, answer)
 	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+save+question", http.StatusSeeOther)
 		return
 	}
 
 	// Success response
-	http.Redirect(w, r, "/feedback/" + strconv.Itoa(newAnswer.ID), http.StatusSeeOther)
+	http.Redirect(w, r, "/feedback/"+strconv.Itoa(newAnswer.ID), http.StatusSeeOther)
 }
 
 func UpdateFeedbackOnAnswer(w http.ResponseWriter, r *http.Request) {
@@ -67,23 +68,23 @@ func UpdateFeedbackOnAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  // Parse the form data
-    if err := r.ParseForm(); err != nil {
+	// Parse the form data
+	if err := r.ParseForm(); err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+parse+form", http.StatusSeeOther)
-        http.Error(w, "Failed to parse form", http.StatusBadRequest)
-        return
-    }
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
+	}
 
-    // Extract values from form
-    answerIdStr := r.FormValue("answer_id")
-    feedback := r.FormValue("feedback")
+	// Extract values from form
+	answerIdStr := r.FormValue("answer_id")
+	feedback := r.FormValue("feedback")
 
-    // Convert answer_id to int
-    answerId, err := strconv.Atoi(answerIdStr)
-    if err != nil {
+	// Convert answer_id to int
+	answerId, err := strconv.Atoi(answerIdStr)
+	if err != nil {
 		http.Redirect(w, r, "/error?message=Failed+to+parse+form", http.StatusSeeOther)
-        return
-    }
+		return
+	}
 
 	// Validate feedback value
 	if feedback != "correct" && feedback != "somewhat" && feedback != "incorrect" {
@@ -98,5 +99,11 @@ func UpdateFeedbackOnAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/random", http.StatusSeeOther)
+	trainingId := cookieUtils.GetTrainingID(r)
+	if trainingId != "" {
+		http.Redirect(w, r, "/random/"+trainingId, http.StatusSeeOther)
+	} else {
+		http.Redirect(w, r, "/random", http.StatusSeeOther)
+	}
+
 }

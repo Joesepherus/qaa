@@ -21,6 +21,7 @@ import (
 	"qaa/templates"
 	"qaa/types/questionsTypes"
 	"qaa/types/userTypes"
+	"qaa/utils/cookieUtils"
 	"strconv"
 )
 
@@ -179,7 +180,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 				templateLocation = templates.BaseLocation + "/feedback.html"
 				pageTitle = "Feedback"
 
-			}else if strings.HasPrefix(r.URL.Path, "/random/") {
+			} else if strings.HasPrefix(r.URL.Path, "/random/") {
 				trainings, err := trainingsService.GetTrainings(user.ID)
 				if err == nil {
 					data["Trainings"] = trainings
@@ -200,6 +201,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 				if training.ID != 0 {
 					question, err = questionsService.GetRandomQuestionWithTraining(user.ID, trainingId)
 					data["TrainingId"] = trainingId
+					cookieUtils.SetTrainingID(w, r, trainingIdStr)
 				} else {
 					question, err = questionsService.GetPrioritizedQuestion(user.ID)
 				}
