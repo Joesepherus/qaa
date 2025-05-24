@@ -179,6 +179,116 @@ func GetPrioritizedQuestion(userID int) (questionsTypes.Question, error) {
 }
 
 
+func GetPrioritizedQuestionWithTraining(userID int, trainingID int) (questionsTypes.Question, error) {
+	log.Println("Fetching prioritized question with training...")
+
+	// Step 1: Get all questions for the user and training
+	questionsQuery := `
+		SELECT id, question_text, correct_answer
+		FROM questions
+		WHERE user_id = $1 AND training_id = $2
+	`
+	rows, err := db.Query(questionsQuery, userID, trainingID)
+	if err != nil {
+		return questionsTypes.Question{}, err
+	}
+	defer rows.Close()
+
+	allQuestions := make(map[int]questionsTypes.Question)
+	for rows.Next() {
+		var q questionsTypes.Question
+		if err := rows.Scan(&q.ID, &q.QuestionText, &q.CorrectAnswer); err != nil {
+			return questionsTypes.Question{}, err
+		}
+		allQuestions[q.ID] = q
+	}
+
+	// Step 2: Get all answers with feedback for the user and training
+	answersQuery := `
+		SELECT a.question_id, a.feedback
+		FROM answers a
+		JOIN questions q ON a.question_id = q.id
+		WHERE a.user_id = $1 AND q.training_id = $2
+	`
+	answerRows, err := db.Query(answersQuery, userID, trainingID)
+	if err != nil {
+		return questionsTypes.Question{}, err
+	}
+	defer answerRows.Close()
+
+	type stats struct {
+		Incorrect int
+		Somewhat  int
+		Correct   int
+	}
+
+	questionStats := make(map[int]*stats)
+	answeredSet := make(map[int]bool)
+
+	for answerRows.Next() {
+		var qID int
+		var feedback string
+		if err := answerRows.Scan(&qID, &feedback); err != nil {
+			return questionsTypes.Question{}, err
+		}
+		answeredSet[qID] = true
+		if _, ok := questionStats[qID]; !ok {
+			questionStats[qID] = &stats{}
+		}
+		switch feedback {
+		case "incorrect":
+			questionStats[qID].Incorrect++
+		case "somewhat":
+			questionStats[qID].Somewhat++
+		case "correct":
+			questionStats[qID].Correct++
+		}
+	}
+
+	// Step 3: Prioritize
+	var unanswered []questionsTypes.Question
+	var scoredList []struct {
+		Question questionsTypes.Question
+		Score    float64
+	}
+
+	for id, q := range allQuestions {
+		if !answeredSet[id] {
+			unanswered = append(unanswered, q)
+			continue
+		}
+
+		s := questionStats[id]
+		score := float64(s.Incorrect)*2 + float64(s.Somewhat) - float64(s.Correct)*1.5
+		scoredList = append(scoredList, struct {
+			Question questionsTypes.Question
+			Score    float64
+		}{q, score})
+	}
+
+	// Step 4: Prefer unanswered first
+	rand.Seed(time.Now().UnixNano())
+	if len(unanswered) > 0 {
+		return unanswered[rand.Intn(len(unanswered))], nil
+	}
+
+	// Sort answered questions by descending score
+	sort.Slice(scoredList, func(i, j int) bool {
+		return scoredList[i].Score > scoredList[j].Score
+	})
+
+	if len(scoredList) == 0 {
+		return questionsTypes.Question{}, errors.New("no questions found for training")
+	}
+
+	// Random from top N
+	topN := 10
+	if len(scoredList) < topN {
+		topN = len(scoredList)
+	}
+
+	return scoredList[rand.Intn(topN)].Question, nil
+}
 
 
 func GetRandomQuestionWithTraining(userID int, trainingID int) (questionsTypes.Question, error) {

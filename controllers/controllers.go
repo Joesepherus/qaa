@@ -199,7 +199,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 				var question questionsTypes.Question
 
 				if training.ID != 0 {
-					question, err = questionsService.GetRandomQuestionWithTraining(user.ID, trainingId)
+					question, err = questionsService.GetPrioritizedQuestionWithTraining(user.ID, trainingId)
 					data["TrainingId"] = trainingId
 					cookieUtils.SetTrainingID(w, r, trainingIdStr)
 				} else {
