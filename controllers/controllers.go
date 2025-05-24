@@ -201,7 +201,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 					question, err = questionsService.GetRandomQuestionWithTraining(user.ID, trainingId)
 					data["TrainingId"] = trainingId
 				} else {
-					question, err = questionsService.GetRandomQuestion(user.ID)
+					question, err = questionsService.GetPrioritizedQuestion(user.ID)
 				}
 
 				if err == nil {

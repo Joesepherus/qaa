@@ -2,10 +2,12 @@ package questionsService
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
 	"qaa/types/questionsTypes"
+	"sort"
 	"time"
 )
 
@@ -67,69 +69,111 @@ func sampleQuestions(input []questionsTypes.Question, count int) []questionsType
 }
 
 func GetPrioritizedQuestion(userID int) (questionsTypes.Question, error) {
-	log.Println("get prioritized")
-	var final []questionsTypes.Question
+	log.Println("Fetching prioritized question...")
 
-	type bucket struct {
-		feedback string
-		questions []questionsTypes.Question
-	}
-
-	// Fetch all questions with feedback in the last hour
-	query := `
-		SELECT q.id, q.question_text, q.correct_answer, a.feedback
-		FROM questions q
-		JOIN answers a ON q.id = a.question_id
-		WHERE a.user_id = $1
-		  AND a.created_at >= NOW() - INTERVAL '1 hour'
+	// Step 1: Get all questions
+	questionsQuery := `
+		SELECT id, question_text, correct_answer
+		FROM questions
+		WHERE user_id = $1
 	`
-	rows, err := db.Query(query, userID)
-
+	rows, err := db.Query(questionsQuery, userID)
 	if err != nil {
 		return questionsTypes.Question{}, err
 	}
 	defer rows.Close()
 
-	// Bucketize questions by feedback
-	var incorrect, somewhat, correct []questionsTypes.Question
-
+	allQuestions := make(map[int]questionsTypes.Question)
 	for rows.Next() {
 		var q questionsTypes.Question
-		var feedback string
-		if err := rows.Scan(&q.ID, &q.QuestionText, &q.CorrectAnswer, &feedback); err != nil {
+		if err := rows.Scan(&q.ID, &q.QuestionText, &q.CorrectAnswer); err != nil {
 			return questionsTypes.Question{}, err
 		}
+		allQuestions[q.ID] = q
+	}
 
+	// Step 2: Get all answers with feedback for this user
+	answersQuery := `
+		SELECT question_id, feedback
+		FROM answers
+		WHERE user_id = $1
+	`
+	answerRows, err := db.Query(answersQuery, userID)
+	if err != nil {
+		return questionsTypes.Question{}, err
+	}
+	defer answerRows.Close()
+
+	type stats struct {
+		Incorrect int
+		Somewhat  int
+		Correct   int
+	}
+
+	questionStats := make(map[int]*stats)
+
+	for answerRows.Next() {
+		var qID int
+		var feedback string
+		if err := answerRows.Scan(&qID, &feedback); err != nil {
+			return questionsTypes.Question{}, err
+		}
+		if _, ok := questionStats[qID]; !ok {
+			questionStats[qID] = &stats{}
+		}
 		switch feedback {
 		case "incorrect":
-			incorrect = append(incorrect, q)
+			questionStats[qID].Incorrect++
 		case "somewhat":
-			somewhat = append(somewhat, q)
+			questionStats[qID].Somewhat++
 		case "correct":
-			correct = append(correct, q)
+			questionStats[qID].Correct++
 		}
 	}
 
-	total := len(incorrect) + len(somewhat) + len(correct)
-println("incorrect", incorrect)
-println("correct", correct)
-	// Decide how many from each bucket based on percentages
-	desiredIncorrect := int(float64(total) * 0.6)
-	desiredSomewhat := int(float64(total) * 0.25)
-	desiredCorrect := total - desiredIncorrect - desiredSomewhat
+	// Step 3: Score and sort
+	type scoredQuestion struct {
+		Question questionsTypes.Question
+		Score    float64
+	}
 
-	// Sample from each bucket (up to available)
-	final = append(final, sampleQuestions(incorrect, desiredIncorrect)...)
-	final = append(final, sampleQuestions(somewhat, desiredSomewhat)...)
-	final = append(final, sampleQuestions(correct, desiredCorrect)...)
+	var scoredList []scoredQuestion
 
-	// If under total, top up with more random
-	// Pick one at random from the prioritized list
+	for id, q := range allQuestions {
+		s := questionStats[id]
+		// Basic scoring: more incorrect = higher score, correct reduces score
+		score := 0.0
+		if s != nil {
+			score += float64(s.Incorrect)*2 + float64(s.Somewhat)
+			score -= float64(s.Correct) * 1.5
+		} else {
+			score = 10 // boost unanswered questions
+		}
+		scoredList = append(scoredList, scoredQuestion{Question: q, Score: score})
+	}
+
+	// Sort by descending score
+	sort.Slice(scoredList, func(i, j int) bool {
+		return scoredList[i].Score > scoredList[j].Score
+	})
+
+	if len(scoredList) == 0 {
+		return questionsTypes.Question{}, errors.New("no questions available")
+	}
+
+	// Pick randomly from top N (e.g., top 5)
+	topN := 5
+	if len(scoredList) < topN {
+		topN = len(scoredList)
+	}
+
 	rand.Seed(time.Now().UnixNano())
-	question := final[rand.Intn(len(final))]
+	choice := scoredList[rand.Intn(topN)]
 
-	return question, nil
+	return choice.Question, nil
 }
+
+
 
 func GetRandomQuestionWithTraining(userID int, trainingID int) (questionsTypes.Question, error) {
 	var question questionsTypes.Question
