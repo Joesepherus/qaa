@@ -92,7 +92,7 @@ func GetPrioritizedQuestion(userID int) (questionsTypes.Question, error) {
 		allQuestions[q.ID] = q
 	}
 
-	// Step 2: Get all answers with feedback for this user
+	// Step 2: Get all answers with feedback
 	answersQuery := `
 		SELECT question_id, feedback
 		FROM answers
@@ -111,6 +111,7 @@ func GetPrioritizedQuestion(userID int) (questionsTypes.Question, error) {
 	}
 
 	questionStats := make(map[int]*stats)
+	answeredSet := make(map[int]bool)
 
 	for answerRows.Next() {
 		var qID int
@@ -118,6 +119,7 @@ func GetPrioritizedQuestion(userID int) (questionsTypes.Question, error) {
 		if err := answerRows.Scan(&qID, &feedback); err != nil {
 			return questionsTypes.Question{}, err
 		}
+		answeredSet[qID] = true
 		if _, ok := questionStats[qID]; !ok {
 			questionStats[qID] = &stats{}
 		}
@@ -131,47 +133,51 @@ func GetPrioritizedQuestion(userID int) (questionsTypes.Question, error) {
 		}
 	}
 
-	// Step 3: Score and sort
-	type scoredQuestion struct {
+	// Step 3: Prioritize
+	var unanswered []questionsTypes.Question
+	var scoredList []struct {
 		Question questionsTypes.Question
 		Score    float64
 	}
 
-	var scoredList []scoredQuestion
-
 	for id, q := range allQuestions {
-		s := questionStats[id]
-		// Basic scoring: more incorrect = higher score, correct reduces score
-		score := 0.0
-		if s != nil {
-			score += float64(s.Incorrect)*2 + float64(s.Somewhat)
-			score -= float64(s.Correct) * 1.5
-		} else {
-			score = 10 // boost unanswered questions
+		if !answeredSet[id] {
+			unanswered = append(unanswered, q)
+			continue
 		}
-		scoredList = append(scoredList, scoredQuestion{Question: q, Score: score})
+
+		s := questionStats[id]
+		score := float64(s.Incorrect)*2 + float64(s.Somewhat) - float64(s.Correct)*1.5
+		scoredList = append(scoredList, struct {
+			Question questionsTypes.Question
+			Score    float64
+		}{q, score})
 	}
 
-	// Sort by descending score
+	// Step 4: Prefer unanswered first
+	rand.Seed(time.Now().UnixNano())
+	if len(unanswered) > 0 {
+		return unanswered[rand.Intn(len(unanswered))], nil
+	}
+
+	// Sort answered questions by descending score
 	sort.Slice(scoredList, func(i, j int) bool {
 		return scoredList[i].Score > scoredList[j].Score
 	})
 
 	if len(scoredList) == 0 {
-		return questionsTypes.Question{}, errors.New("no questions available")
+		return questionsTypes.Question{}, errors.New("no questions found")
 	}
 
-	// Pick randomly from top N (e.g., top 5)
-	topN := 5
+	// Random from top N
+	topN := 10
 	if len(scoredList) < topN {
 		topN = len(scoredList)
 	}
 
-	rand.Seed(time.Now().UnixNano())
-	choice := scoredList[rand.Intn(topN)]
-
-	return choice.Question, nil
+	return scoredList[rand.Intn(topN)].Question, nil
 }
+
 
 
 
