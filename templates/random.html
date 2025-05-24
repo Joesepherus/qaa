@@ -14,7 +14,7 @@
       <h2>Random Question</h2>
       <div class="question-container">
         {{ if .Question }}
-        <form class="question-form" action="api/answers/save-answer" method="POST">
+        <form class="question-form" action="/api/answers/save-answer" method="POST">
           <div class="question-text">
             <label>Question:</label>
             <p>{{ .Question.QuestionText }}</p>

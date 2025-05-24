@@ -298,6 +298,7 @@ func RestApi() {
 	http.Handle("/api/trainings/save-training", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(trainingsController.SaveTraining)))
 	http.Handle("/api/training/edit-training", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(trainingsController.EditTraining)))
 	http.Handle("/api/training/delete-training", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(trainingsController.DeleteTraining)))
+	http.Handle("/api/answers/save-answer", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(answersController.SaveAnswer)))
 	http.Handle("/api/answers/feedback", authMiddleware.TokenAuthMiddleware(http.HandlerFunc(answersController.UpdateFeedbackOnAnswer)))
 
 	// Authentication routes
