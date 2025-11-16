@@ -68,6 +68,11 @@ function playAudio(url) {
   audio.play();
 }
 
+function toggleMenu() {
+    const navList = document.querySelector(".navigation-list");
+    navList.classList.toggle("active");
+}
+
 window.onload = function() {
   if (isQuestionUrl()) {
     openEditQuestionModal()
