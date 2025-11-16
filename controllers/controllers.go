@@ -315,6 +315,7 @@ func RestApi() {
 
 	// Serve static files (CSS)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	http.Handle("/files/", http.StripPrefix("/files/", http.FileServer(http.Dir("./files"))))
 
 	log.Printf("Starting server on :%d...\n", port)
 	log.Fatal(server.ListenAndServe())

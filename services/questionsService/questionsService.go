@@ -20,7 +20,7 @@ func SetDB(database *sql.DB) {
 func GetQuestions(userID int) ([]questionsTypes.Question, error) {
 	var questions []questionsTypes.Question
 
-	rows, err := db.Query("SELECT id, question_text, correct_answer, training_id FROM questions WHERE user_id = $1", userID)
+	rows, err := db.Query("SELECT id, question_text, correct_answer, training_id, audio_url FROM questions WHERE user_id = $1", userID)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to query alerts: %v", err)
@@ -30,7 +30,7 @@ func GetQuestions(userID int) ([]questionsTypes.Question, error) {
 	// Iterate over rows and scan into struct
 	for rows.Next() {
 		var question questionsTypes.Question
-		if err := rows.Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer, &question.TrainingID); err != nil {
+		if err := rows.Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer, &question.TrainingID, &question.AudioURL); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %v", err)
 		}
 		questions = append(questions, question)
@@ -47,9 +47,9 @@ func GetQuestions(userID int) ([]questionsTypes.Question, error) {
 func GetRandomQuestion(userID int) (questionsTypes.Question, error) {
 	var question questionsTypes.Question
 
-	row := db.QueryRow("SELECT id, question_text, correct_answer FROM questions WHERE user_id = $1 ORDER BY RANDOM() LIMIT 1", userID)
+	row := db.QueryRow("SELECT id, question_text, correct_answer, audio_url FROM questions WHERE user_id = $1 ORDER BY RANDOM() LIMIT 1", userID)
 
-	if err := row.Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer); err != nil {
+	if err := row.Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer, &question.AudioURL); err != nil {
 		return questionsTypes.Question{}, fmt.Errorf("failed to scan question: %v", err)
 	}
 
@@ -73,7 +73,7 @@ func GetPrioritizedQuestion(userID int) (questionsTypes.Question, error) {
 
 	// Step 1: Get all questions
 	questionsQuery := `
-		SELECT id, question_text, correct_answer
+		SELECT id, question_text, correct_answer, audio_url
 		FROM questions
 		WHERE user_id = $1
 	`
@@ -86,7 +86,7 @@ func GetPrioritizedQuestion(userID int) (questionsTypes.Question, error) {
 	allQuestions := make(map[int]questionsTypes.Question)
 	for rows.Next() {
 		var q questionsTypes.Question
-		if err := rows.Scan(&q.ID, &q.QuestionText, &q.CorrectAnswer); err != nil {
+		if err := rows.Scan(&q.ID, &q.QuestionText, &q.CorrectAnswer, &q.AudioURL); err != nil {
 			return questionsTypes.Question{}, err
 		}
 		allQuestions[q.ID] = q
@@ -184,7 +184,7 @@ func GetPrioritizedQuestionWithTraining(userID int, trainingID int) (questionsTy
 
 	// Step 1: Get all questions for the user and training
 	questionsQuery := `
-		SELECT id, question_text, correct_answer
+		SELECT id, question_text, correct_answer, audio_url
 		FROM questions
 		WHERE user_id = $1 AND training_id = $2
 	`
@@ -197,7 +197,7 @@ func GetPrioritizedQuestionWithTraining(userID int, trainingID int) (questionsTy
 	allQuestions := make(map[int]questionsTypes.Question)
 	for rows.Next() {
 		var q questionsTypes.Question
-		if err := rows.Scan(&q.ID, &q.QuestionText, &q.CorrectAnswer); err != nil {
+		if err := rows.Scan(&q.ID, &q.QuestionText, &q.CorrectAnswer, &q.AudioURL); err != nil {
 			return questionsTypes.Question{}, err
 		}
 		allQuestions[q.ID] = q
@@ -294,9 +294,9 @@ func GetPrioritizedQuestionWithTraining(userID int, trainingID int) (questionsTy
 func GetRandomQuestionWithTraining(userID int, trainingID int) (questionsTypes.Question, error) {
 	var question questionsTypes.Question
 
-	row := db.QueryRow("SELECT id, question_text, correct_answer FROM questions WHERE training_id = $1 AND user_id = $2 ORDER BY RANDOM() LIMIT 1", trainingID, userID)
+	row := db.QueryRow("SELECT id, question_text, correct_answer, audio_url FROM questions WHERE training_id = $1 AND user_id = $2 ORDER BY RANDOM() LIMIT 1", trainingID, userID)
 
-	if err := row.Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer); err != nil {
+	if err := row.Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer, &question.AudioURL); err != nil {
 		return questionsTypes.Question{}, fmt.Errorf("failed to scan question: %v", err)
 	}
 
@@ -306,8 +306,8 @@ func GetRandomQuestionWithTraining(userID int, trainingID int) (questionsTypes.Q
 func GetQuestionById(userID int, questionID int) (questionsTypes.Question, error) {
 	var question questionsTypes.Question
 
-	err := db.QueryRow("SELECT id, question_text, correct_answer, training_id FROM questions WHERE id = $1 AND user_id = $2", questionID, userID).
-		Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer, &question.TrainingID)
+	err := db.QueryRow("SELECT id, question_text, correct_answer, training_id, audio_url FROM questions WHERE id = $1 AND user_id = $2", questionID, userID).
+		Scan(&question.ID, &question.QuestionText, &question.CorrectAnswer, &question.TrainingID, &question.AudioURL)
 
 	if err != nil {
 		return questionsTypes.Question{}, fmt.Errorf("failed to query question: %v", err)

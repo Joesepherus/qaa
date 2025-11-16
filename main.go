@@ -15,8 +15,6 @@ import (
 
 var db *sql.DB
 
-
-
 func main() {
 
 	templates.InitTemplates("./templates")
@@ -25,7 +23,7 @@ func main() {
 	defer database.DB.Close()
 	// Pass the db connection to alertsService
 	questionsService.SetDB(db)
-    answersService.SetDB(db)
+	answersService.SetDB(db)
 	trainingsService.SetDB(db)
 	usersService.SetDB(db)
 

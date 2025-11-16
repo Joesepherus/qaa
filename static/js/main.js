@@ -63,6 +63,11 @@ function isTrainingURL() {
   return regex.test(pathname);
 }
 
+function playAudio(url) {
+  const audio = new Audio(url);
+  audio.play();
+}
+
 window.onload = function() {
   if (isQuestionUrl()) {
     openEditQuestionModal()
