@@ -65,7 +65,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/":
 			templateLocation = templates.BaseLocation + "/index.html"
-			pageTitle = "Trading Alerts"
+			pageTitle = "Learn Slovak"
 		case "/health":
 			healthHandler(w)
 			return
@@ -85,7 +85,7 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/":
 			templateLocation = templates.BaseLocation + "/index.html"
-			pageTitle = "Trading Alerts"
+			pageTitle = "Learn Slovak"
 		case "/random":
 
 			question, err := questionsService.GetPrioritizedQuestion(user.ID)

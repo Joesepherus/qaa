@@ -138,7 +138,7 @@ func ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	// Send the reset link via email
 	resetLink := fmt.Sprintf(os.Getenv("URL")+"?token=%s", token)
-	go mail.SendEmail(email, "Trading Alerts: Password Reset", fmt.Sprintf(
+	go mail.SendEmail(email, "Learn Slovak: Password Reset", fmt.Sprintf(
 		"Click the link below to reset your password: %s", resetLink,
 	))
 
