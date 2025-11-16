@@ -93,6 +93,18 @@ func InitDB() *sql.DB {
 	}
 
 	statement, err = DB.Prepare(`
+    ALTER TABLE questions 
+    ADD COLUMN IF NOT EXISTS image_url TEXT;
+`)
+	if err != nil {
+		log.Fatal("Error preparing image_url migration:", err)
+	}
+	_, err = statement.Exec()
+	if err != nil {
+		log.Fatal("Error executing image_url migration:", err)
+	}
+
+	statement, err = DB.Prepare(`
     CREATE TABLE IF NOT EXISTS answers (
         id SERIAL PRIMARY KEY,
         question_id INT NOT NULL,
